@@ -7,7 +7,7 @@
 *   Author:     Matthias Schweikardt
 *   Email:      matthias.schweikardt@reutlingen-university.de
 *
-*   Revision:   0.0.1       (2019-03-29)
+*   Revision:   2019-03-29 Created
 *
 *   Copyright 2019 Reutlingen University (Germany)
 *
@@ -32,14 +32,16 @@
 	ML2TIKZ
 	(
 		@key
-		(oCellView (geGetEditCellView))
+		(oCellView (geGetWindowCellView))
 		(sOutDir "./")
 		(sLatexCompiler "pdflatex")
 		(sLayersLatexFile nil)
+		(nGridSize 1.0)
 		(bGraphicalMode nil)
 		(bDebug nil)
 		(xShapesPerFile 5e3)
-		(bExecute t)
+		(bSplitLayers nil)
+		(bMake t)
 	)
 
 	(let (v)
@@ -50,9 +52,7 @@
 		(eval v)->model = (list nil)
 		(eval v)->temp = (list nil)
 		(eval v)->temp->sStartTime = (buildString (parseString (getCurrentTime) ": ") "_")
-		(eval v)->model->sLatexCompiler =sLatexCompiler
-		(eval v)->model->bExecute = bExecute
-		(eval v)->model->bDebug = bDebug
+
 
 		;fReadInLayersLatexFile
 		(putpropq 
@@ -64,12 +64,14 @@
 
 					(when 
 						(and
-							(stringp (eval v)->model->sLayersLatexFile )
-							(isFile (eval v)->model->sLayersLatexFile )
-							(isReadable (eval v)->model->sLayersLatexFile )
+							(stringp (eval v)->model->sLayersLatexFile)
+							(isFile (eval v)->model->sLayersLatexFile)
+							(isReadable (eval v)->model->sLayersLatexFile)
 						);and
 
-						pPort = (infile (eval v)->model->sLayersLatexFile )
+						(eval v)->model->sLayersLatexFileName = (car (last (parseString (eval v)->model->sLayersLatexFile "/")))
+
+						(setq pPort (infile (eval v)->model->sLayersLatexFile))
 
 						(while (gets s pPort)
 
@@ -103,7 +105,8 @@
 		(putpropq 
 		    (eval v)->model
 			(lambda (v)
-				(let (sStartPhrase sEndPhrase pCombinedTikZ pScript pTikZ (i 1) (xShapeCount 0))
+				(let (sStartPhrase sEndPhrase sBoundingBox lShapes (pTikZ nil) pMakefile (i 0) (xShapeCount 0) (lFilesToCompile nil) (lFilesPerLayer nil) (lFilesForToplevel nil))
+
 					(putpropq 
 						(eval v)->model
 						(dbOpenCellViewByType 
@@ -144,31 +147,27 @@
 							0:0 
 							"R0"
 						);dbCreateInst
-						32 			;x_levels
-						t 			;g_flattenPCells
-						nil 		;g_preservePins
-						nil 		;g_preserveRODobjs
-						nil 		;g_delDetachedBlockages
-						nil 		;g_preservePinFigs
-						t			;g_flattenVias
+						/* x_levels */ 				 32
+						/* g_flattenPCells */ 		 t
+						/* g_preservePins */ 		 nil
+						/* g_preserveRODobjs */ 	 nil
+						/* g_delDetachedBlockages */ nil
+						/* g_preservePinFigs */ 	 nil
+						/* g_flattenVias */ 		 t
 					);leFlattenInst
 
 					(eval v)->model->xNumOfShapes = 0
 
 					(foreach lLayer (eval v)->model->lLayers
-						(putpropq 
+						(putpropq
 						    (eval v)->model
 							(plus
 								(eval v)->model->xNumOfShapes
 								(length
-									(dbLayerOr 
+									(dbLayerOr
 										(eval v)->model->oCombinedCellView
-										(car lLayer) 
-										(setof 
-											x 
-											(eval v)->model->oFlattenCellView~>shapes 
-											(equal x~>lpp lLayer)
-										);setof
+										(car lLayer)
+										(setof x (eval v)->model->oFlattenCellView~>shapes (equal x~>lpp lLayer))
 									);dbLayerOr
 								);length
 							);plus
@@ -176,9 +175,9 @@
 						);putpropq
 					);foreach
 
-					(when (eval v)->model->xNumOfShapes>(eval v)->model->xShapesPerFile 
+					(when (eval v)->model->xNumOfShapes > (eval v)->model->xShapesPerFile && (not (eval v)->model->bSplitLayers)
 
-						(eval v)->model->xShapesPerFile = (ceiling (eval v)->model->xNumOfShapes/(ceiling 1.0*(eval v)->model->xNumOfShapes/(eval v)->model->xShapesPerFile ))
+						(eval v)->model->xShapesPerFile = (ceiling (eval v)->model->xNumOfShapes/(ceiling 1.0*(eval v)->model->xNumOfShapes/(eval v)->model->xShapesPerFile))
 					);when
 
 					(dbSave (eval v)->model->oFlattenCellView)
@@ -202,95 +201,91 @@
 
 					(createDir (eval v)->model->sOutDir)
 
+					(shell (strcat "cp " (eval v)->model->sLayersLatexFile  " " (eval v)->model->sOutDir (eval v)->model->sLayersLatexFileName))
+
 					(setq
 						sStartPhrase
 						(strcat
 							"\\documentclass{standalone}\n"
-							"\\usepackage{xcolor}\n"
 							"\\usepackage{tikz}\n"
 							"\\usepackage{graphicx}\n"
-							"\\input{\"" (eval v)->model->sLayersLatexFile "\"}\n"
+							"\\input{\"" (eval v)->model->sLayersLatexFileName "\"}\n"
 							"\\begin{document}\n"
-							"\\begin{tikzpicture}[x=1cm,y=1cm]\n"
-							(lsprintf
-								"\\draw[line width = 0mm,white] (%L,%L) rectangle (%L,%L);\n" 
-								(xCoord (lowerLeft (eval v)->model->oCombinedCellView~>bBox))-0.01
-								(yCoord (lowerLeft (eval v)->model->oCombinedCellView~>bBox))-0.01
-								(xCoord (upperRight (eval v)->model->oCombinedCellView~>bBox))+0.01
-								(yCoord (upperRight (eval v)->model->oCombinedCellView~>bBox))+0.01
-							);lsprintf
+							"\\begin{tikzpicture}[x=" (lsprintf "%L" (eval v)->model->nGridSize) "cm,y=" (lsprintf "%L" (eval v)->model->nGridSize) "cm]\n"
 						);strcat
+					);setq
+
+					(setq
+						sBoundingBox
+						(lsprintf
+							"\\draw[line width = 0mm,white,opacity=1.0] (%L,%L) rectangle (%L,%L);\n"
+							(xCoord (lowerLeft (eval v)->model->oCombinedCellView~>bBox))-0.01
+							(yCoord (lowerLeft (eval v)->model->oCombinedCellView~>bBox))-0.01
+							(xCoord (upperRight (eval v)->model->oCombinedCellView~>bBox))+0.01
+							(yCoord (upperRight (eval v)->model->oCombinedCellView~>bBox))+0.01
+						);lsprintf
 					);setq
 
 					(setq
 						sEndPhrase
 						(strcat
 							"\\end{tikzpicture}\n"
-							"\\end{document}\n"
+							"\\end{document}"
 						);strcat
 					);setq
 
-					(setq 
-						pTikZ 
-						(outfile 
-							(strcat 
-								(eval v)->model->sOutDir
-								"layout_0.tex"
-							);strcat
-						);outfile
-					);setq
-
-					(fprintf pTikZ sStartPhrase)
-
-					(setq 
-						pCombinedTikZ 
-						(outfile 
-							(strcat 
-								(eval v)->model->sOutDir
-								(eval v)->model->oSourceCellView~>libName
-								"_"
-								(eval v)->model->oSourceCellView~>cellName
-								"_"
-								(eval v)->model->oSourceCellView~>viewName
-								".tex"
-							);strcat
-						);outfile
-					);setq
-
-					(fprintf 
-						pCombinedTikZ 
-						"%s"
-						(strcat
-							"\\documentclass{standalone}\n"
-							"\\usepackage{tikz}\n"
-							"\\usepackage{graphicx}\n"
-							"\\begin{document}\n"
-							"\\begin{tikzpicture}\n"
-						);strcat
-					);fprintf
-
-					(fprintf pCombinedTikZ "\\node at (0,0) {\\includegraphics{layout_0.pdf}};\n")
-					
-					(setq 
-						pScript 
-						(outfile 
-							(strcat 
-								(eval v)->model->sOutDir
-								"layout2tikz.sh"
-							);strcat
-						);outfile
-					);setq
-					(fprintf pScript "#!/bin/sh\n")
-					(fprintf pScript (strcat (eval v)->model->sLatexCompiler " layout_0.tex\n"))
 					(foreach lLayer (eval v)->model->lLayers
 
-						(foreach oShape (setof x (eval v)->model->oCombinedCellView~>shapes x~>lpp==lLayer)
+
+						(setq lShapes (setof x (eval v)->model->oCombinedCellView~>shapes x~>lpp==lLayer))
+
+						(if (eval v)->model->bSplitLayers then
+
+							(if (eval v)->model->xShapesPerFile >= (length lShapes)  then
+
+								(setq sTikZFileName (lsprintf "%s_%s" (car lLayer) (cadr lLayer)))
+								(setq i -1)
+								(setq lFilesForToplevel (cons sTikZFileName lFilesForToplevel))
+							else
+
+								(setq sTikZFileName (lsprintf "%s_%s_0" (car lLayer) (cadr lLayer)))
+								(setq i 0)
+								(setq lFilesPerLayer (cons sTikZFileName lFilesPerLayer))
+							);if
+
+							(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))			
+							(fprintf pTikZ "%s%s" sStartPhrase sBoundingBox)
+							(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
+
+						else
+							(unless (portp pTikZ)
+
+								(if (eval v)->model->xShapesPerFile >= (length lShapes)  then
+
+									(setq sTikZFileName (lsprintf "%s_%s_%s" (eval v)->model->oSourceCellView~>libName  (eval v)->model->oSourceCellView~>cellName (eval v)->model->oSourceCellView~>viewName))
+									
+								else
+
+									(setq sTikZFileName "0")	
+									
+									(setq lFilesForToplevel (cons sTikZFileName lFilesForToplevel))
+								);if
+
+								(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
+								(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))			
+								(fprintf pTikZ "%s%s" sStartPhrase sBoundingBox)
+
+							);unless
+						);if
+
+						(foreach oShape lShapes
 
 							(if (equal oShape~>objType "rect") then
+
 								(fprintf 
 									pTikZ
 									"\\draw[%s_%s] (%L,%L) rectangle (%L,%L);\n" 
-									(car lLayer) 
+									(car lLayer)
 									(cadr lLayer)
 									(xCoord (lowerLeft oShape~>bBox))
 									(yCoord (lowerLeft oShape~>bBox))  
@@ -299,6 +294,7 @@
 								);fprintf
 
 							else
+
 								(when (equal oShape~>objType "polygon")
 
 									(fprintf 
@@ -315,6 +311,7 @@
 									);foreach
 
 									(fprintf pTikZ " -- cycle;\n")
+
 								);when
 							);if
 
@@ -323,66 +320,132 @@
 							(when xShapeCount >= (eval v)->model->xShapesPerFile
 
 								(fprintf pTikZ "%s" sEndPhrase)
-
 								(close pTikZ)
 
-								(setq 
-									pTikZ 
-									(outfile 
-										(strcat 
-											(eval v)->model->sOutDir
-											"layout_"
-											(lsprintf "%L" i)
-											".tex"
-										);strcat
-									);outfile
-								);setq
-								(fprintf pCombinedTikZ "\\node at (0,0) {\\includegraphics{layout_%L.pdf}};\n" i)
-								(fprintf pScript (strcat (eval v)->model->sLatexCompiler " layout_" (lsprintf "%L" i) ".tex\n"))
-								(fprintf pTikZ "%s" sStartPhrase)
+								(if (eval v)->model->bSplitLayers then
 
-								i = i+1
-								xShapeCount = 0
+									(setq sTikZFileName (lsprintf "%s_%s_%L" (car lLayer) (cadr lLayer) ++i))
+									(setq lFilesPerLayer (cons sTikZFileName lFilesPerLayer))
+								else
+	
+									(setq sTikZFileName (lsprintf "%L" ++i))
+									(setq lFilesForToplevel (cons sTikZFileName lFilesForToplevel))
+
+								);if
+
+								(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))	
+								(fprintf pTikZ "%s%s" sStartPhrase sBoundingBox)
+								(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
+
+								(setq xShapeCount 0)
 							);when
 						);foreach
-					);foreach
-					(fprintf pTikZ "%s" sEndPhrase)
-					(fprintf pCombinedTikZ "%s" sEndPhrase)
-					(fprintf 
-						pScript 
-						(strcat 
-							(eval v)->model->sLatexCompiler 
-							" " 
-							(eval v)->model->oSourceCellView~>libName 
-							"_" 
-							(eval v)->model->oSourceCellView~>cellName 
-							"_" 
-							(eval v)->model->oSourceCellView~>viewName  
-							".tex\n"
-						);strcat
-					);fprintf
-					(close pTikZ)
-					(close pScript)
-					(close pCombinedTikZ)
-					(shell (strcat "chmod u+x " (eval v)->model->sOutDir "layout2tikz.sh"))
-					(dbClose (eval v)->model->oCombinedCellView)
+						
+						(when (eval v)->model->bSplitLayers
 
-					(when (eval v)->model->bExecute 
-						(shell (strcat "sh " (eval v)->model->sOutDir "layout2tikz.sh"))
+							(fprintf pTikZ "%s" sEndPhrase)
+							(close pTikZ)
+
+							(when i >= 0
+		
+								(setq sTikZFileName (lsprintf "layout_%s_%s" (car lLayer) (cadr lLayer)))
+								(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))			
+								(fprintf pTikZ "%s" sStartPhrase)
+								(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
+
+								(foreach sFileName (reverse lFilesPerLayer)
+								    
+									(fprintf pTikZ "\\node at (0,0) {\\includegraphics{%s.pdf}};\n" sFileName)
+
+								);foreach
+
+								(fprintf pTikZ "%s" sEndPhrase)
+								(close pTikZ)
+
+								(setq lFilesForToplevel (cons sTikZFileName lFilesForToplevel))
+
+								(setq lFilesPerLayer nil)
+								(setq i 0)	
+								(setq xShapeCount 0)
+							);when
+
+						);when		
+						
+					);foreach
+
+					(unless (eval v)->model->bSplitLayers
+
+						(fprintf pTikZ "%s" sEndPhrase)
+						(close pTikZ)
+					);unless
+
+					(when lFilesForToplevel
+
+						(setq sTikZFileName (lsprintf "%s_%s_%s" (eval v)->model->oSourceCellView~>libName  (eval v)->model->oSourceCellView~>cellName (eval v)->model->oSourceCellView~>viewName))
+						(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))
+						(fprintf pTikZ "%s" sStartPhrase)
+
+						(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
+
+						(foreach sFileName (reverse lFilesForToplevel)
+
+							(fprintf pTikZ "\\node at (0,0) {\\includegraphics{%s.pdf}};\n" sFileName)
+						);foreach
+
+						(fprintf pTikZ "%s" sEndPhrase)
+						(close pTikZ)					    
 					);when
-					(if (eval v)->model->bDebug then
+					
+					(setq pMakefile (outfile (strcat (eval v)->model->sOutDir "Makefile")))
+					(fprintf pMakefile "LATEXCOMPILER=%s\n" (eval v)->model->sLatexCompiler)
+					(fprintf pMakefile "\nmake:")
+
+					(foreach sFileName (reverse lFilesToCompile)
+
+						(fprintf pMakefile "\n\t${LATEXCOMPILER} %s.tex" sFileName)
+					);foreach
+
+					(close pMakefile)
+					
+					(when (eval v)->model->bMake 
+						(shell (strcat "cd " (eval v)->model->sOutDir "\n" "make"))
+					);when
+
+					(let (dFlattenCellView dCombinedCellView)
+
+						(setq
+							dFlattenCellView
+							(ddGetObj
+								(eval v)->model->oFlattenCellView~>libName
+								(eval v)->model->oFlattenCellView~>cellName
+								(eval v)->model->oFlattenCellView~>viewName
+							);ddGetObj
+						);setq
+
+						(setq
+							dCombinedCellView
+							(ddGetObj
+								(eval v)->model->oCombinedCellView~>libName
+								(eval v)->model->oCombinedCellView~>cellName
+								(eval v)->model->oCombinedCellView~>viewName
+							);ddGetObj
+						);setq
 
 						(dbClose (eval v)->model->oFlattenCellView)
 						(dbClose (eval v)->model->oCombinedCellView)
-					else
-						(dbDeleteObject (eval v)->model->oFlattenCellView)
-						(dbDeleteObject (eval v)->model->oCombinedCellView)
-					);if
+
+						(unless (eval v)->model->bDebug
+
+							(ddDeleteObj dFlattenCellView)
+							(ddDeleteObj dCombinedCellView)
+						);unless
+					);let
+				
+					(eval v)->model->sOutDir
 				);let
 			);lambda
 			fWriteTikZ
 		);putpropq
-
 
 		(if 
 			(and
@@ -413,6 +476,16 @@
 					);unless	
 				);unless
 
+				(eval v)->model->sLatexCompiler =sLatexCompiler
+
+				(eval v)->model->bMake = bMake
+
+				(eval v)->model->bDebug = bDebug
+
+				(eval v)->model->nGridSize = nGridSize
+
+				(eval v)->model->bSplitLayers = bSplitLayers
+
 				(if (eval v)->model->fReadInLayersLatexFile(v) then
 
 					(if (isDir (eval v)->model->sOutDir) && (isWritable (eval v)->model->sOutDir)  then
@@ -421,14 +494,14 @@
 						(eval v)->model->fWriteTikZ(v)
 
 					else
-						(fprintf errport "*layout2TikZ* No valid output directory is specified\n")
+						(fprintf errport "*mL2TikZ* No valid output directory is specified\n")
 					);if 
 				else
-					(fprintf errport "*layout2TikZ* No valid layers in %L\n" (eval v)->model->sLayersLatexFile)
+					(fprintf errport "*mL2TikZ* No valid layers in %L\n" (eval v)->model->sLayersLatexFile)
 				);if
 			);if
 		else
-			(fprintf errport "*layout2TikZ* No valid maskLayout view found\n")
+			(fprintf errport "*mL2TikZ* No valid maskLayout view found\n")
 		);if
 	);let
 );defun
