@@ -105,7 +105,7 @@
 		(putpropq 
 		    (eval v)->model
 			(lambda (v)
-				(let (sStartPhrase sEndPhrase sBoundingBox lShapes (pTikZ nil) pMakefile (i 0) (xShapeCount 0) (lFilesToCompile nil) (lFilesPerLayer nil) (lFilesForToplevel nil))
+				(let (sStartPhrase sEndPhrase sBoundingBox lShapes (pTikZ nil) pMakefile sTikZFileName (i 0) (xShapeCount 0) (lFilesToCompile nil) (lFilesPerLayer nil) (lFilesForToplevel nil))
 
 					(putpropq 
 						(eval v)->model
