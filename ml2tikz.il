@@ -34,25 +34,28 @@
 		@key
 		(oCellView (geGetWindowCellView))
 		(sOutDir "./")
-		(sLatexCompiler "pdflatex")
 		(sLayersLatexFile nil)
+		(sLatexCompiler "pdflatex")		
 		(nGridSize 1.0)
-		(bGraphicalMode nil)
 		(bDebug nil)
 		(xShapesPerFile 5e3)
 		(bSplitLayers nil)
 		(bMake t)
+
+		(bGraphicalMode nil)
 	)
 
-	(let (v)
+	(let ()
 
 		(setq v	(gensym))
-		(set v (list nil))
 
-		(eval v)->model = (list nil)
-		(eval v)->temp = (list nil)
+		(unless (boundp v)
+		    (set v (list nil))
+		    (eval v)->temp = (list nil) 
+		    (eval v)->model = (list nil)
+		);unless
+		
 		(eval v)->temp->sStartTime = (buildString (parseString (getCurrentTime) ": ") "_")
-
 
 		;fReadInLayersLatexFile
 		(putpropq 
@@ -105,7 +108,21 @@
 		(putpropq 
 		    (eval v)->model
 			(lambda (v)
-				(let (sStartPhrase sEndPhrase sBoundingBox lShapes (pTikZ nil) pMakefile sTikZFileName (i 0) (xShapeCount 0) (lFilesToCompile nil) (lFilesPerLayer nil) (lFilesForToplevel nil))
+				(let 
+					(	;local parameters
+						sStartPhrase
+						sEndPhrase
+						sBoundingBox
+						lShapes
+						(pTikZ nil)
+						pMakefile
+						sTikZFileName
+						(i 0)
+						(xShapeCount 0)
+						(lFilesToCompile nil)
+						(lFilesPerLayer nil)
+						(lFilesForToplevel nil)
+					)
 
 					(putpropq 
 						(eval v)->model
@@ -123,7 +140,7 @@
 						oFlattenCellView
 					);putpropq
 
-					(putpropq 
+					(putpropq
 						(eval v)->model
 						(dbOpenCellViewByType 
 							(eval v)->model->oSourceCellView~>libName
@@ -447,17 +464,128 @@
 			fWriteTikZ
 		);putpropq
 
-		(if 
+		(if		
 			(and
 				oCellView
 				(dbIsId oCellView)
 				(equal "maskLayout" oCellView~>cellViewType)
 			);and
-
+			
 			then
 
 			(if bGraphicalMode then
-				nil
+
+				(eval v)->view = (list nil)
+				(eval v)->view->forms = (list nil)
+				(eval v)->view->forms->callbacks = (list nil)
+				
+				(putpropq 
+					(eval v)->view->forms
+					(hiCreateFileSelectorField
+						?name 'rOutDirFileSelectorField
+						?mode 'directoryOnly
+						?prompt "Output Dir"
+					);hiCreateFileSelectorField
+					rOutDirFileSelectorField
+				);putpropq
+
+				(putpropq 
+					(eval v)->view->forms
+					(hiCreateFileSelectorField
+						?name 'rLatexFileFileSelectorField
+						?mode 'existingFile
+						?prompt "Layers Latex File"
+					);hiCreateFileSelectorField
+					rLatexFileFileSelectorField
+				);putpropq
+
+				(putpropq 
+					(eval v)->view->forms
+					(hiCreateFloatField
+						?name 'rGridSizeFloatForm
+						?prompt "Grid Size [cm]"
+						?value nGridSize
+					);hiCreateFloatField
+					rGridSizeFloatForm
+				);putpropq
+
+				(putpropq 
+					(eval v)->view->forms
+					(hiCreateStringField
+						?name 'rLatexCompilerStringField
+						?prompt "Latex Compiler"
+						?value  sLatexCompiler
+					);hiCreateStringField
+					rLatexCompilerStringField
+				);putpropq
+
+				(putpropq 
+					(eval v)->view->forms
+					(hiCreateIntField
+						?name 'rShapesPerFileIntField
+						?prompt "# Shapes per File"
+						?value xShapesPerFile
+					);hiCreateIntField
+					rShapesPerFileIntField
+				);putpropq
+
+				(putpropq 
+					(eval v)->view->forms
+					(hiCreateBooleanButton
+						?name 'rSplitLayerBooleanButton
+						?buttonText "Split Layers"
+						?defValue bSplitLayers
+					);hiCreateBooleanButton
+					rSplitLayerBooleanButton
+				);putpropq
+
+				(putpropq 
+					(eval v)->view->forms
+					(hiCreateBooleanButton
+						?name 'rMakeBooleanButton
+						?buttonText "Make"
+						?defValue bMake
+					);hiCreateBooleanButton
+					rMakeBooleanButton
+				);putpropq
+
+				(putpropq 
+					(eval v)->view->forms
+					(hiCreateBooleanButton
+						?name 'rDebugBooleanButton
+						?buttonText "Debug"
+						?defValue bDebug
+					);hiCreateBooleanButton
+					rDebugBooleanButton
+				);putpropq
+
+				(putpropq 
+					(eval v)->view->forms
+					(hiCreateFormLayout
+						'rML2TIKZFormLayout
+						?frame "rML2TIKZFormLayout"
+						?items
+							(foreach mapcar sForm (eval v)->view->forms->?
+								(get (eval v)->view->forms sForm)
+							);foreach
+					);hiCreateFormLayout
+					rML2TIKZFormLayout
+				);putpropq
+
+				(putpropq
+					(eval v)->view->forms
+					(hiCreateLayoutForm
+						'rML2TIKZLayoutForm
+						"ML2TikZ"
+						(eval v)->view->forms->rML2TIKZFormLayout
+						?sizePolicy 'fixed
+						?dialogStyle 'modal
+						?buttonLayout 'OKCancelApply
+					);hiCreateLayoutForm
+					rML2TIKZLayoutForm
+				);putpropq
+
+				(hiDisplayForm (eval v)->view->forms->rML2TIKZLayoutForm)
 			else
 
 				(eval v)->model->sLayersLatexFile = sLayersLatexFile
