@@ -38,16 +38,15 @@
 		(sLatexCompiler "pdflatex")		
 		(nGridSize 1.0)
 		(bDebug nil)
-		(xShapesPerFile 5e3)
+		(xShapesPerFile 1000)
 		(bSplitLayers nil)
 		(bMake t)
-
 		(bGraphicalMode nil)
 	)
 
-	(let ()
+	(let (v)
 
-		(setq v	(gensym))
+		(setq v	'ML2TIKZ)
 
 		(unless (boundp v)
 		    (set v (list nil))
@@ -253,7 +252,6 @@
 
 					(foreach lLayer (eval v)->model->lLayers
 
-
 						(setq lShapes (setof x (eval v)->model->oCombinedCellView~>shapes x~>lpp==lLayer))
 
 						(if (eval v)->model->bSplitLayers then
@@ -279,12 +277,18 @@
 
 								(if (eval v)->model->xShapesPerFile >= (length lShapes)  then
 
-									(setq sTikZFileName (lsprintf "%s_%s_%s" (eval v)->model->oSourceCellView~>libName  (eval v)->model->oSourceCellView~>cellName (eval v)->model->oSourceCellView~>viewName))
-									
+									(setq 
+										sTikZFileName 
+										(lsprintf 
+											"%s_%s_%s" 
+											(eval v)->model->oSourceCellView~>libName
+											(eval v)->model->oSourceCellView~>cellName
+											(eval v)->model->oSourceCellView~>viewName
+										);lsprintf
+									);setq
 								else
 
 									(setq sTikZFileName "0")	
-									
 									(setq lFilesForToplevel (cons sTikZFileName lFilesForToplevel))
 								);if
 
@@ -385,9 +389,7 @@
 								(setq i 0)	
 								(setq xShapeCount 0)
 							);when
-
 						);when		
-						
 					);foreach
 
 					(unless (eval v)->model->bSplitLayers
@@ -464,6 +466,46 @@
 			fWriteTikZ
 		);putpropq
 
+		(putpropq 
+			(eval v)->model
+			(lambda (v)
+				(and
+					(if (eval v)->model->fReadInLayersLatexFile(v) then
+						t
+					else
+						(fprintf errport "*mL2TikZ* No valid layers in %L\n" (eval v)->model->sLayersLatexFile)
+						nil
+					);if
+					(if (isDir (eval v)->model->sOutDir) && (isWritable (eval v)->model->sOutDir) then
+
+						(eval v)->model->sOutDir = (strcat "/" (buildString (parseString (simplifyFilename (eval v)->model->sOutDir) "/") "/") "/")
+
+					else
+						(fprintf errport "*mL2TikZ* No valid output directory is specified\n")
+						nil
+					);if
+					(if (fixp (eval v)->model->xShapesPerFile) && (eval v)->model->xShapesPerFile > 0 then
+						t
+					else
+						(eval v)->model->xShapesPerFile = 1000
+					);if
+					(if (stringp (eval v)->model->sLatexCompiler) then
+						t
+					else
+						(fprintf errport "*mL2TikZ* No LaTeX compiler specified\n")
+						nil
+					);if
+					(if (numberp (eval v)->model->nGridSize) && (eval v)->model->nGridSize > 0 then
+					    t
+					else
+						(fprintf errport "*mL2TikZ* No valid grid size specified\n")
+						nil
+					);if
+			    );and
+			);lambda
+			fCheckInout
+		);putpropq
+
 		(if		
 			(and
 				oCellView
@@ -473,92 +515,117 @@
 			
 			then
 
+			(eval v)->model->oSourceCellView = oCellView
+
 			(if bGraphicalMode then
 
 				(eval v)->view = (list nil)
 				(eval v)->view->forms = (list nil)
-				(eval v)->view->forms->callbacks = (list nil)
-				
+				(eval v)->view->callbacks = (list nil)
+
+				;rOutDirFileSelectorField
 				(putpropq 
 					(eval v)->view->forms
 					(hiCreateFileSelectorField
 						?name 'rOutDirFileSelectorField
 						?mode 'directoryOnly
 						?prompt "Output Dir"
+						?value
+							(if (eval v)->model->sOutDir then
+								(eval v)->model->sOutDir
+							else
+								" "
+							);if
 					);hiCreateFileSelectorField
 					rOutDirFileSelectorField
 				);putpropq
 
+				;rLatexFileFileSelectorField
 				(putpropq 
 					(eval v)->view->forms
 					(hiCreateFileSelectorField
 						?name 'rLatexFileFileSelectorField
 						?mode 'existingFile
 						?prompt "Layers Latex File"
+						?value
+							(if (eval v)->model->sLayersLatexFile then
+								(eval v)->model->sLayersLatexFile
+							else
+								" "
+							);if
 					);hiCreateFileSelectorField
 					rLatexFileFileSelectorField
 				);putpropq
 
+				;rGridSizeFloatForm
 				(putpropq 
 					(eval v)->view->forms
 					(hiCreateFloatField
 						?name 'rGridSizeFloatForm
 						?prompt "Grid Size [cm]"
-						?value nGridSize
+						?value ?value (if (numberp (eval v)->model->nGridSize) then (eval v)->model->nGridSize else 1.0)
+						?range (0.1 "infinity")
 					);hiCreateFloatField
 					rGridSizeFloatForm
 				);putpropq
 
+				;rLatexCompilerStringField
 				(putpropq 
 					(eval v)->view->forms
 					(hiCreateStringField
 						?name 'rLatexCompilerStringField
 						?prompt "Latex Compiler"
-						?value  sLatexCompiler
+						?value (if (stringp (eval v)->model->sLatexCompiler) then (eval v)->model->sLatexCompiler else "pdflatex")
 					);hiCreateStringField
 					rLatexCompilerStringField
 				);putpropq
 
+				;rShapesPerFileIntField
 				(putpropq 
 					(eval v)->view->forms
 					(hiCreateIntField
 						?name 'rShapesPerFileIntField
 						?prompt "# Shapes per File"
-						?value xShapesPerFile
+						?value (if (fixp (eval v)->model->xShapesPerFile) then (eval v)->model->xShapesPerFile else 1000)
+						?range (1 "infinity")
 					);hiCreateIntField
 					rShapesPerFileIntField
 				);putpropq
 
+				;rSplitLayerBooleanButton
 				(putpropq 
 					(eval v)->view->forms
 					(hiCreateBooleanButton
 						?name 'rSplitLayerBooleanButton
 						?buttonText "Split Layers"
-						?defValue bSplitLayers
+						?value (eval v)->model->bSplitLayers
 					);hiCreateBooleanButton
 					rSplitLayerBooleanButton
 				);putpropq
 
+				;rMakeBooleanButton
 				(putpropq 
 					(eval v)->view->forms
 					(hiCreateBooleanButton
 						?name 'rMakeBooleanButton
 						?buttonText "Make"
-						?defValue bMake
+						?defValue (eval v)->model->bMake
 					);hiCreateBooleanButton
 					rMakeBooleanButton
 				);putpropq
 
+				;rDebugBooleanButton
 				(putpropq 
 					(eval v)->view->forms
 					(hiCreateBooleanButton
 						?name 'rDebugBooleanButton
 						?buttonText "Debug"
-						?defValue bDebug
+						?defValue (eval v)->model->bDebug
 					);hiCreateBooleanButton
 					rDebugBooleanButton
 				);putpropq
 
+				;rML2TIKZFormLayout
 				(putpropq 
 					(eval v)->view->forms
 					(hiCreateFormLayout
@@ -572,6 +639,7 @@
 					rML2TIKZFormLayout
 				);putpropq
 
+				;rML2TIKZLayoutForm
 				(putpropq
 					(eval v)->view->forms
 					(hiCreateLayoutForm
@@ -581,52 +649,54 @@
 						?sizePolicy 'fixed
 						?dialogStyle 'modal
 						?buttonLayout 'OKCancelApply
+						?callback
+							(list
+								"(eval 'ML2TIKZ)->view->callbacks->fExecuteML2TIKZ('ML2TIKZ)"
+								"nil"
+							);list
 					);hiCreateLayoutForm
 					rML2TIKZLayoutForm
+				);putpropq
+
+				;fExecuteML2TIKZ
+				(putpropq
+					(eval v)->view->callbacks
+					(lambda (v)
+
+						(eval v)->model->sLayersLatexFile 	= (eval v)->view->forms->rLatexFileFileSelectorField->value
+						(eval v)->model->sOutDir 			= (eval v)->view->forms->rOutDirFileSelectorField->value
+						(eval v)->model->xShapesPerFile 	= (eval v)->view->forms->rShapesPerFileIntField->value
+						(eval v)->model->sLatexCompiler 	= (eval v)->view->forms->rLatexCompilerStringField->value
+						(eval v)->model->bMake 				= (eval v)->view->forms->rMakeBooleanButton->value
+						(eval v)->model->bDebug 			= (eval v)->view->forms->rDebugBooleanButton->value
+						(eval v)->model->nGridSize 			= (eval v)->view->forms->rGridSizeFloatForm->value
+						(eval v)->model->bSplitLayers 		= (eval v)->view->forms->rSplitLayerBooleanButton->value
+
+						(when (eval v)->model->fCheckInout(v)
+
+							(eval v)->model->fWriteTikZ(v)
+						);when
+					);lambda
+					fExecuteML2TIKZ
 				);putpropq
 
 				(hiDisplayForm (eval v)->view->forms->rML2TIKZLayoutForm)
 			else
 
 				(eval v)->model->sLayersLatexFile = sLayersLatexFile
-
 				(eval v)->model->oSourceCellView = oCellView
-
 				(eval v)->model->sOutDir = sOutDir
-
 				(eval v)->model->xShapesPerFile = xShapesPerFile
-
-				(unless (fixp (eval v)->model->xShapesPerFile)
-
-					(unless (eval v)->model->xShapesPerFile > 1
-
-						(eval v)->model->xShapesPerFile = 5e3
-					);unless	
-				);unless
-
 				(eval v)->model->sLatexCompiler =sLatexCompiler
-
 				(eval v)->model->bMake = bMake
-
 				(eval v)->model->bDebug = bDebug
-
 				(eval v)->model->nGridSize = nGridSize
-
 				(eval v)->model->bSplitLayers = bSplitLayers
 
-				(if (eval v)->model->fReadInLayersLatexFile(v) then
+				(when (eval v)->model->fCheckInout(v)
 
-					(if (isDir (eval v)->model->sOutDir) && (isWritable (eval v)->model->sOutDir)  then
-
-						(eval v)->model->sOutDir = (strcat "/" (buildString (parseString (simplifyFilename (eval v)->model->sOutDir) "/") "/") "/")
-						(eval v)->model->fWriteTikZ(v)
-
-					else
-						(fprintf errport "*mL2TikZ* No valid output directory is specified\n")
-					);if 
-				else
-					(fprintf errport "*mL2TikZ* No valid layers in %L\n" (eval v)->model->sLayersLatexFile)
-				);if
+					(eval v)->model->fWriteTikZ(v)
+				);when
 			);if
 		else
 			(fprintf errport "*mL2TikZ* No valid maskLayout view found\n")
