@@ -704,3 +704,32 @@
 		);if
 	);let
 );defun
+
+(defun ML2TIKZCreateLayoutPulldownMenu ()
+	(if (boundp 'ML2TIKZLayoutPulldownMenu) then 
+		ML2TIKZLayoutPulldownMenu
+	else
+		(hiCreatePulldownMenu
+			'ML2TIKZLayoutPulldownMenu
+			"Export"
+			(list
+				(hiCreateMenuItem
+					?name 'ML2TIKZMenuItem
+					?itemText "mL2TikZ"
+					?callback "(ML2TIKZ ?bGraphicalMode t)"
+				);hiCreateMenuItem
+			);list
+		);hiCreatePulldownMenu
+	);if
+);defun
+
+(defun ML2TIKZUserPostInstallTrigger (args)
+	(hiInsertBannerMenu
+		args->window
+		(ML2TIKZCreateLayoutPulldownMenu)
+		(length (hiGetBannerMenus args->window))
+	);hiInsertBannerMenu
+);procedure
+
+(deRegUserTriggers "maskLayout" nil nil 'ML2TIKZUserPostInstallTrigger)
+(deRegUserTriggers "maskLayoutXL" nil nil 'ML2TIKZUserPostInstallTrigger)

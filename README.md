@@ -6,7 +6,7 @@
 
 Cadence SKILL function, which can be used to create a *tikzpicture* of a *maskLayout*. This is especially useful for theses, publications and presentation.
 
-## Example Usage
+## Installation
 
 The function can be used by loading the SKILL file *ml2tikz.il* in Cadence Virtuoso:
 
@@ -16,7 +16,11 @@ load("ml2tikz.il")
 
 A more convenient way might be to add this load command in the `.cdsinit`.
 
-Afterwards the function ML2TIKZ can be invoked in the Command Interpreter Window (CIW).
+## Usage
+
+### Command Interpreter Window
+
+The function ML2TIKZ must be invoked in the Command Interpreter Window (CIW).
 
 ```
 (ML2TIKZ ?sOutDir "~/myExports"  ?sLayersLatexFile "~/myLayerDefinition.tex")
@@ -50,7 +54,13 @@ This *Makefile* can be executed using
 make
 ```
 
-## Function Parameters
+### GUI
+
+
+
+
+
+## Parameters
 The function ML2TIKZ has several keyword parameters:
 
 `oCellView`
