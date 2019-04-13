@@ -466,6 +466,7 @@
 			fWriteTikZ
 		);putpropq
 
+		;fCheckInout
 		(putpropq 
 			(eval v)->model
 			(lambda (v)
@@ -563,8 +564,8 @@
 					(hiCreateFloatField
 						?name 'rGridSizeFloatForm
 						?prompt "Grid Size [cm]"
-						?value ?value (if (numberp (eval v)->model->nGridSize) then (eval v)->model->nGridSize else 1.0)
-						?range (0.1 "infinity")
+						?value (if (numberp (eval v)->model->nGridSize) then (eval v)->model->nGridSize else 1.0)
+						?range list(0.1 nil)
 					);hiCreateFloatField
 					rGridSizeFloatForm
 				);putpropq
@@ -587,7 +588,7 @@
 						?name 'rShapesPerFileIntField
 						?prompt "# Shapes per File"
 						?value (if (fixp (eval v)->model->xShapesPerFile) then (eval v)->model->xShapesPerFile else 1000)
-						?range (1 "infinity")
+						?range (list 1 "infinity")
 					);hiCreateIntField
 					rShapesPerFileIntField
 				);putpropq
