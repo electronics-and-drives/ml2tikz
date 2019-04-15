@@ -56,8 +56,11 @@ make
 
 ### GUI
 
+This tool is added to the Layout Editor under *Export* in the menu bar. If the tool is invoked, a GUI will show up:
 
+![](fig/ml2tikz_gui.png)
 
+There all [parameters](#Parameters) can be specified. By pressing *OK* or *Apply* the *tikzpicture* is created.
 
 
 ## Parameters
