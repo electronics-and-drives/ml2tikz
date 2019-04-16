@@ -8,6 +8,7 @@
 *   Email:      matthias.schweikardt@reutlingen-university.de
 *
 *   Revision:   2019-03-29 Created
+*               2019-04-16 Added GUI
 *
 *   Copyright 2019 Reutlingen University (Germany)
 *

@@ -60,7 +60,7 @@ This tool is added to the Layout Editor under *Export* in the menu bar. If the t
 
 ![](fig/ml2tikz_gui.png)
 
-There all [parameters](#Parameters) can be specified. By pressing *OK* or *Apply* the *tikzpicture* is created.
+There, some [parameters](#Parameters) can be specified. By pressing *OK* or *Apply* the *tikzpicture* is created.
 
 
 ## Parameters
