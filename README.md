@@ -10,7 +10,7 @@ Cadence SKILL function, which can be used to create a *tikzpicture* of a *maskLa
 
 The function can be used by loading the SKILL file *ml2tikz.il* in Cadence Virtuoso:
 
-```
+``` scheme
 load("ml2tikz.il")
 ```
 
@@ -22,7 +22,7 @@ A more convenient way might be to add this load command in the `.cdsinit`.
 
 The function ML2TIKZ must be invoked in the Command Interpreter Window (CIW).
 
-```
+``` scheme
 (ML2TIKZ ?sOutDir "~/myExports"  ?sLayersLatexFile "~/myLayerDefinition.tex")
 ```
 
@@ -36,7 +36,7 @@ The function must be provided with a *.tex* file (`"~/myLayerDefinition.tex"` in
 
 Only LPPs, separated with a underscore, in  a `\tikzstyle` command, are considered for export, e.g
 
-```
+``` tex
 \tikzstyle{Metal1_drawing}=[draw=blue,fill=blue, fill opacity=0.5]
 ```
 
@@ -50,7 +50,7 @@ In this *.tex* file additional definitions e.g. other usepackages must be define
 In the result directory a *Makefile* is created, which contains the compilation commands needed for compiling the *pdf*.
 This *Makefile* can be executed using 
 
-```
+``` bash
 make
 ```
 
