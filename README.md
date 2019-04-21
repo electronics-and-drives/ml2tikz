@@ -105,6 +105,9 @@ If this parameter is true, additional *tikzpictures* will be created, which cont
 
 If this parameter is set true, `make` is executed automatically.
 
+## Implementation Details
+
+In the directory *examples* an example of an exported nand2 logic gate is added.
 
 ## Implementation Details
 
