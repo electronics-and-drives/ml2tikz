@@ -169,7 +169,7 @@
 						/* g_preservePins */ 		 nil
 						/* g_preserveRODobjs */ 	 nil
 						/* g_delDetachedBlockages */ nil
-						/* g_preservePinFigs */ 	 nil
+						/* g_preservePinFigs */ 	 t
 						/* g_flattenVias */ 		 t
 					);leFlattenInst
 
