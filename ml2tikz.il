@@ -213,12 +213,12 @@
 							(eval v)->temp->sStartTime
 							"/"
 						);strcat
-						sOutDir
+						sResOutDir
 					);putpropq
 
-					(createDir (eval v)->model->sOutDir)
+					(createDir (eval v)->model->sResOutDir)
 
-					(shell (strcat "cp " (eval v)->model->sLayersLatexFile  " " (eval v)->model->sOutDir (eval v)->model->sLayersLatexFileName))
+					(shell (strcat "cp " (eval v)->model->sLayersLatexFile  " " (eval v)->model->sResOutDir (eval v)->model->sLayersLatexFileName))
 
 					(setq
 						sStartPhrase
@@ -269,14 +269,13 @@
 								(setq lFilesPerLayer (cons sTikZFileName lFilesPerLayer))
 							);if
 
-							(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))			
+							(setq pTikZ (outfile (strcat (eval v)->model->sResOutDir sTikZFileName ".tex")))			
 							(fprintf pTikZ "%s%s" sStartPhrase sBoundingBox)
 							(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
-
 						else
 							(unless (portp pTikZ)
 
-								(if (eval v)->model->xShapesPerFile >= (length lShapes)  then
+								(if (eval v)->model->xNumOfShapes <= (eval v)->model->xShapesPerFile  then
 
 									(setq 
 										sTikZFileName 
@@ -287,14 +286,14 @@
 											(eval v)->model->oSourceCellView~>viewName
 										);lsprintf
 									);setq
+									
 								else
 
 									(setq sTikZFileName "0")	
 									(setq lFilesForToplevel (cons sTikZFileName lFilesForToplevel))
 								);if
-
 								(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
-								(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))			
+								(setq pTikZ (outfile (strcat (eval v)->model->sResOutDir sTikZFileName ".tex")))			
 								(fprintf pTikZ "%s%s" sStartPhrase sBoundingBox)
 
 							);unless
@@ -337,7 +336,7 @@
 								);when
 							);if
 
-							xShapeCount = xShapeCount + 1
+							(preincrement xShapeCount)
 
 							(when xShapeCount >= (eval v)->model->xShapesPerFile
 
@@ -355,7 +354,7 @@
 
 								);if
 
-								(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))	
+								(setq pTikZ (outfile (strcat (eval v)->model->sResOutDir sTikZFileName ".tex")))	
 								(fprintf pTikZ "%s%s" sStartPhrase sBoundingBox)
 								(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
 
@@ -371,7 +370,7 @@
 							(when i >= 0
 		
 								(setq sTikZFileName (lsprintf "layout_%s_%s" (car lLayer) (cadr lLayer)))
-								(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))			
+								(setq pTikZ (outfile (strcat (eval v)->model->sResOutDir sTikZFileName ".tex")))			
 								(fprintf pTikZ "%s" sStartPhrase)
 								(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
 
@@ -402,7 +401,7 @@
 					(when lFilesForToplevel
 
 						(setq sTikZFileName (lsprintf "%s_%s_%s" (eval v)->model->oSourceCellView~>libName  (eval v)->model->oSourceCellView~>cellName (eval v)->model->oSourceCellView~>viewName))
-						(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))
+						(setq pTikZ (outfile (strcat (eval v)->model->sResOutDir sTikZFileName ".tex")))
 						(fprintf pTikZ "%s" sStartPhrase)
 
 						(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
@@ -416,7 +415,7 @@
 						(close pTikZ)					    
 					);when
 					
-					(setq pMakefile (outfile (strcat (eval v)->model->sOutDir "Makefile")))
+					(setq pMakefile (outfile (strcat (eval v)->model->sResOutDir "Makefile")))
 					(fprintf pMakefile "LATEXCOMPILER=%s\n" (eval v)->model->sLatexCompiler)
 					(fprintf pMakefile "\nmake:")
 
@@ -428,7 +427,7 @@
 					(close pMakefile)
 					
 					(when (eval v)->model->bMake 
-						(shell (strcat "cd " (eval v)->model->sOutDir "\n" "make"))
+						(shell (strcat "cd " (eval v)->model->sResOutDir "\n" "make"))
 					);when
 
 					(let (dFlattenCellView dCombinedCellView)
@@ -461,7 +460,7 @@
 						);unless
 					);let
 				
-					(eval v)->model->sOutDir
+					(eval v)->model->sResOutDir
 				);let
 			);lambda
 			fWriteTikZ
