@@ -89,11 +89,15 @@ The LaTeX compiler, which should be used. If this parameter is not provided *pdf
 
 The grid side of the *tikzpicture* in centimeters. If this value is not provided, 1cm is used as a default value.
 
-` bDebug `
+`nMargin`
+
+The margin of the *tikzpicture*. If this value is not provided, no margin is drawn.
+
+`bDebug`
 
 If this parameter is true, the [intermediate cellviews](#implementation-details) are not deleted at the end.
 
-` xShapesPerFile `
+`xShapesPerFile`
 
 Due to limited memory, a *tikzpicture* can contain only a limited number of shapes. This parameter can be used to control the maximum number of shapes that are within one *tikzpicture*. If the maskLayout to be exported contains more shapes that specified by this parameter, the maskLayout will be splitted automatically in several TeX files, s.t. the maximum number of shapes per single file is not exceeded. The compilation results of the individual TeX files will be merged in a final *tikzpicture*.
 

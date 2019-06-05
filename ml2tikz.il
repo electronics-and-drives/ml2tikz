@@ -9,6 +9,7 @@
 *
 *   Revision:   2019-03-29 Created
 *               2019-04-16 Added GUI
+*               2019-06-05 Added margin
 *
 *   Copyright 2019 Reutlingen University (Germany)
 *
@@ -42,6 +43,7 @@
 		(xShapesPerFile 1000)
 		(bSplitLayers nil)
 		(bMake t)
+		(nMargin 0)
 		(bGraphicalMode nil)
 	)
 
@@ -236,10 +238,10 @@
 						sBoundingBox
 						(lsprintf
 							"\\draw[line width = 0mm,white,opacity=1.0] (%L,%L) rectangle (%L,%L);\n"
-							(xCoord (lowerLeft (eval v)->model->oCombinedCellView~>bBox))-0.01
-							(yCoord (lowerLeft (eval v)->model->oCombinedCellView~>bBox))-0.01
-							(xCoord (upperRight (eval v)->model->oCombinedCellView~>bBox))+0.01
-							(yCoord (upperRight (eval v)->model->oCombinedCellView~>bBox))+0.01
+							(xCoord (lowerLeft (eval v)->model->oCombinedCellView~>bBox))-0.01-(eval v)->model->nMargin
+							(yCoord (lowerLeft (eval v)->model->oCombinedCellView~>bBox))-0.01-(eval v)->model->nMargin
+							(xCoord (upperRight (eval v)->model->oCombinedCellView~>bBox))+0.01+(eval v)->model->nMargin
+							(yCoord (upperRight (eval v)->model->oCombinedCellView~>bBox))+0.01+(eval v)->model->nMargin
 						);lsprintf
 					);setq
 
@@ -569,6 +571,18 @@
 					);hiCreateFloatField
 					rGridSizeFloatForm
 				);putpropq
+				
+				;rMarginFloatForm
+				(putpropq 
+					(eval v)->view->forms
+					(hiCreateFloatField
+						?name 'rMarginFloatForm
+						?prompt "Margin"
+						?value (if (numberp (eval v)->model->nMargin) then (eval v)->model->nMargin else 0.0)
+						?range list(0.0 nil)
+					);hiCreateFloatField
+					rMarginFloatForm
+				);putpropq
 
 				;rLatexCompilerStringField
 				(putpropq 
@@ -672,6 +686,7 @@
 						(eval v)->model->bDebug 			= (eval v)->view->forms->rDebugBooleanButton->value
 						(eval v)->model->nGridSize 			= (eval v)->view->forms->rGridSizeFloatForm->value
 						(eval v)->model->bSplitLayers 		= (eval v)->view->forms->rSplitLayerBooleanButton->value
+						(eval v)->model->nMargin 		= (eval v)->view->forms->rMarginFloatForm->value
 
 						(when (eval v)->model->fCheckInout(v)
 
@@ -693,6 +708,7 @@
 				(eval v)->model->bDebug = bDebug
 				(eval v)->model->nGridSize = nGridSize
 				(eval v)->model->bSplitLayers = bSplitLayers
+				(eval v)->model->nMargin = nMargin
 
 				(when (eval v)->model->fCheckInout(v)
 
