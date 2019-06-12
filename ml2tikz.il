@@ -606,6 +606,17 @@
 					);hiCreateIntField
 					rShapesPerFileIntField
 				);putpropq
+				
+				;rOpenWithStringField
+				(putpropq 
+					(eval v)->view->forms
+					(hiCreateStringField
+						?name 'rOpenWithStringField
+						?prompt "Open with"
+						?value (if (stringp (eval v)->model->sOpenWith) then (eval v)->model->sOpenWith else "")
+					);hiCreateStringField
+					rOpenWithStringField
+				);putpropq
 
 				;rSplitLayerBooleanButton
 				(putpropq 
@@ -672,7 +683,7 @@
 					);hiCreateLayoutForm
 					rML2TIKZLayoutForm
 				);putpropq
-
+				
 				;fExecuteML2TIKZ
 				(putpropq
 					(eval v)->view->callbacks
@@ -687,10 +698,22 @@
 						(eval v)->model->nGridSize 			= (eval v)->view->forms->rGridSizeFloatForm->value
 						(eval v)->model->bSplitLayers 		= (eval v)->view->forms->rSplitLayerBooleanButton->value
 						(eval v)->model->nMargin 		= (eval v)->view->forms->rMarginFloatForm->value
+						
+						(if (and (eval v)->view->forms->rOpenWithStringField->value (greaterp (strlen (eval v)->view->forms->rOpenWithStringField->value) 0)) then
+							(eval v)->model->sOpenWith = (eval v)->view->forms->rOpenWithStringField->value
+							
+						else
+							(eval v)->model->sOpenWith = nil
+						);when
 
 						(when (eval v)->model->fCheckInout(v)
-
+						
 							(eval v)->model->fWriteTikZ(v)
+							
+							(when (eval v)->model->sOpenWith 
+								(system (strcat eval v)->model->sOpenWith " " (eval v)->model->sResOutDir)
+							);when
+							
 						);when
 					);lambda
 					fExecuteML2TIKZ
@@ -711,9 +734,12 @@
 				(eval v)->model->nMargin = nMargin
 
 				(when (eval v)->model->fCheckInout(v)
-
 					(eval v)->model->fWriteTikZ(v)
+					
+					
 				);when
+				
+				
 			);if
 		else
 			(fprintf errport "*mL2TikZ* No valid maskLayout view found\n")
