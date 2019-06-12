@@ -228,7 +228,7 @@
 							"\\documentclass{standalone}\n"
 							"\\usepackage{tikz}\n"
 							"\\usepackage{graphicx}\n"
-							"\\input{\"" (eval v)->model->sLayersLatexFileName "\"}\n"
+							"\\input{" (eval v)->model->sLayersLatexFileName "}\n"
 							"\\begin{document}\n"
 							"\\begin{tikzpicture}[x=" (lsprintf "%L" (eval v)->model->nGridSize) "cm,y=" (lsprintf "%L" (eval v)->model->nGridSize) "cm]\n"
 						);strcat
