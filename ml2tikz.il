@@ -710,10 +710,20 @@
 						
 							(eval v)->model->fWriteTikZ(v)
 							
-							(when (eval v)->model->sOpenWith 
-								(system (strcat eval v)->model->sOpenWith " " (eval v)->model->sResOutDir)
-							);when
+							(if (eval v)->model->sOpenWith then
 							
+								(system (strcat (eval v)->model->sOpenWith " " (eval v)->model->sResOutDir))
+								
+							else
+								(hiDisplayAppDBox 
+									?name 'rML2TIKZres 
+									?dboxBanner "ML2TikZ Result" 
+									?dboxText (eval v)->model->sResOutDir
+									?dialogType 3 
+									?buttonLayout 
+									'Close
+								);hiDisplayAppDBox
+							);if
 						);when
 					);lambda
 					fExecuteML2TIKZ

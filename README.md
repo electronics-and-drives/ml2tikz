@@ -11,7 +11,7 @@ Cadence SKILL function, which can be used to create a *tikzpicture* of a *maskLa
 The function can be used by loading the SKILL file *ml2tikz.il* in Cadence Virtuoso:
 
 ``` scheme
-load("ml2tikz.il")
+(load "ml2tikz.il")
 ```
 
 A more convenient way might be to add this load command in the `.cdsinit`.
@@ -61,6 +61,9 @@ This tool is added to the Layout Editor under *Export* in the menu bar. If the t
 ![](fig/ml2tikz_gui.png)
 
 There, some [parameters](#Parameters) can be specified. By pressing *OK* or *Apply* the *tikzpicture* is created.
+
+The field *Open With* can be used to specify the tool which will be used to open the resulting directory (e.g. *thunar* , *nautilus* , *xterm*, etc.).
+If this value is not specified, the resulting directory is shown in a dialog box.
 
 
 ## Parameters
@@ -112,6 +115,8 @@ If this parameter is set true, `make` is executed automatically.
 ## Examples
 
 In the directory *examples* an example of an exported nand2 logic gate is added.
+
+![](fig/nand2.png)
 
 ## Implementation Details
 
