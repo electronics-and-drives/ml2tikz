@@ -129,5 +129,5 @@ In this new layout all shapes of interest are copied in merged.
 
 Needed LaTeX usepackages:
 
-+ graphicx
-+ tikz
++ [graphicx](https://ctan.org/pkg/graphicx)  
++ [tikz](https://www.ctan.org/pkg/pgf)
