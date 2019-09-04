@@ -185,7 +185,7 @@
 								(length
 									(dbLayerOr
 										(eval v)->model->oCombinedCellView
-										(car lLayer)
+										lLayer
 										(setof x (eval v)->model->oFlattenCellView~>shapes (equal x~>lpp lLayer))
 									);dbLayerOr
 								);length
