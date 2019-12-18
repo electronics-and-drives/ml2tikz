@@ -203,6 +203,7 @@
 					(dbSave (eval v)->model->oFlattenCellView)
 					(dbSave (eval v)->model->oCombinedCellView)
 
+					/*
 					(putpropq 
 					    (eval v)->model
 						(strcat
@@ -220,8 +221,9 @@
 					);putpropq
 
 					(createDir (eval v)->model->sResOutDir)
+					*/
 
-					(shell (strcat "cp " (eval v)->model->sLayersLatexFile  " " (eval v)->model->sResOutDir (eval v)->model->sLayersLatexFileName))
+					(shell (strcat "cp " (eval v)->model->sLayersLatexFile  " " (eval v)->model->sOutDir (eval v)->model->sLayersLatexFileName))
 
 					(setq
 						sStartPhrase
@@ -284,7 +286,7 @@
 								(setq lFilesPerLayer (cons sTikZFileName lFilesPerLayer))
 							);if
 
-							(setq pTikZ (outfile (strcat (eval v)->model->sResOutDir sTikZFileName ".tex")))			
+							(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))			
 							(fprintf pTikZ "%s%s" sStartPhrase sBoundingBox)
 							(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
 						else
@@ -308,7 +310,7 @@
 									(setq lFilesForToplevel (cons sTikZFileName lFilesForToplevel))
 								);if
 								(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
-								(setq pTikZ (outfile (strcat (eval v)->model->sResOutDir sTikZFileName ".tex")))			
+								(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))			
 								(fprintf pTikZ "%s%s" sStartPhrase sBoundingBox)
 
 							);unless
@@ -369,7 +371,7 @@
 
 								);if
 
-								(setq pTikZ (outfile (strcat (eval v)->model->sResOutDir sTikZFileName ".tex")))	
+								(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))	
 								(fprintf pTikZ "%s%s" sStartPhrase sBoundingBox)
 								(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
 
@@ -385,7 +387,7 @@
 							(when i >= 0
 		
 								(setq sTikZFileName (lsprintf "layout_%s_%s" (car lLayer) (cadr lLayer)))
-								(setq pTikZ (outfile (strcat (eval v)->model->sResOutDir sTikZFileName ".tex")))			
+								(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))			
 								(fprintf pTikZ "%s" sStartPhrase)
 								(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
 
@@ -416,7 +418,7 @@
 					(when lFilesForToplevel
 
 						(setq sTikZFileName (lsprintf "%s_%s_%s" (eval v)->model->oSourceCellView~>libName  (eval v)->model->oSourceCellView~>cellName (eval v)->model->oSourceCellView~>viewName))
-						(setq pTikZ (outfile (strcat (eval v)->model->sResOutDir sTikZFileName ".tex")))
+						(setq pTikZ (outfile (strcat (eval v)->model->sOutDir sTikZFileName ".tex")))
 						(fprintf pTikZ "%s" sStartPhrase)
 
 						(setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
@@ -430,7 +432,7 @@
 						(close pTikZ)					    
 					);when
 					
-					(setq pMakefile (outfile (strcat (eval v)->model->sResOutDir "Makefile")))
+					(setq pMakefile (outfile (strcat (eval v)->model->sOutDir "Makefile")))
 					(fprintf pMakefile "LATEXCOMPILER=%s\n" (eval v)->model->sLatexCompiler)
 					(fprintf pMakefile "\nmake:")
 
@@ -442,7 +444,7 @@
 					(close pMakefile)
 					
 					(when (eval v)->model->bMake 
-						(shell (strcat "cd " (eval v)->model->sResOutDir "\n" "make"))
+						(shell (strcat "cd " (eval v)->model->sOutDir "\n" "make"))
 					);when
 
 					(let (dFlattenCellView dCombinedCellView)
@@ -475,7 +477,7 @@
 						);unless
 					);let
 				
-					(eval v)->model->sResOutDir
+					(eval v)->model->sOutDir
 				);let
 			);lambda
 			fWriteTikZ
@@ -492,7 +494,19 @@
 						(fprintf errport "*mL2TikZ* No valid layers in %L\n" (eval v)->model->sLayersLatexFile)
 						nil
 					);if
-					(if (isDir (eval v)->model->sOutDir) && (isWritable (eval v)->model->sOutDir) then
+					(if 
+						(or 
+							(and
+								(isDir (eval v)->model->sOutDir)
+								(isWritable (eval v)->model->sOutDir)
+							);and
+							(and
+								(createDir (eval v)->model->sOutDir)
+								(deleteDir (eval v)->model->sOutDir)
+							);and
+						);or
+
+					then
 
 						(eval v)->model->sOutDir = (strcat "/" (buildString (parseString (simplifyFilename (eval v)->model->sOutDir) "/") "/") "/")
 
@@ -547,11 +561,12 @@
 						?mode 'directoryOnly
 						?prompt "Output Dir"
 						?value
-							(if (eval v)->model->sOutDir then
-								(eval v)->model->sOutDir
-							else
-								" "
-							);if
+			              (lsprintf
+			                "./%s_%s_%s"
+			                v->model->oCellView~>libName
+			                v->model->oCellView~>cellName
+			                v->model->oCellView~>viewName
+			              );lsprintf
 					);hiCreateFileSelectorField
 					rOutDirFileSelectorField
 				);putpropq
@@ -726,13 +741,13 @@
 							
 							(if (eval v)->model->sOpenWith then
 							
-								(system (strcat (eval v)->model->sOpenWith " " (eval v)->model->sResOutDir))
+								(system (strcat (eval v)->model->sOpenWith " " (eval v)->model->sOutDir))
 								
 							else
 								(hiDisplayAppDBox 
 									?name 'rML2TIKZres 
 									?dboxBanner "ML2TikZ Result" 
-									?dboxText (eval v)->model->sResOutDir
+									?dboxText (eval v)->model->sOutDir
 									?dialogType 3 
 									?buttonLayout 
 									'Close
