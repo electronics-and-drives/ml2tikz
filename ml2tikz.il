@@ -680,6 +680,7 @@
 								"(eval 'ML2TIKZ)->view->callbacks->fExecuteML2TIKZ('ML2TIKZ)"
 								"nil"
 							);list
+						?buttonDisabled (list 'Help)
 					);hiCreateLayoutForm
 					rML2TIKZLayoutForm
 				);putpropq
