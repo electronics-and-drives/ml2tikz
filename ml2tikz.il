@@ -42,6 +42,7 @@
 		(bDebug nil)
 		(xShapesPerFile 1000)
 		(bSplitLayers nil)
+		(bBox nil)
 		(bMake t)
 		(nMargin 0)
 		(bGraphicalMode nil)
@@ -238,10 +239,22 @@
 						sBoundingBox
 						(lsprintf
 							"\\draw[line width = 0mm,white,opacity=1.0] (%L,%L) rectangle (%L,%L);\n"
-							(xCoord (lowerLeft (eval v)->model->oCombinedCellView~>bBox))-0.01-(eval v)->model->nMargin
-							(yCoord (lowerLeft (eval v)->model->oCombinedCellView~>bBox))-0.01-(eval v)->model->nMargin
-							(xCoord (upperRight (eval v)->model->oCombinedCellView~>bBox))+0.01+(eval v)->model->nMargin
-							(yCoord (upperRight (eval v)->model->oCombinedCellView~>bBox))+0.01+(eval v)->model->nMargin
+							(if (eval v)->model->bBox 
+							  	(xCoord (lowerLeft (eval v)->model->bBox))
+								(xCoord (lowerLeft (eval v)->model->oCombinedCellView~>bBox))-0.01-(eval v)->model->nMargin
+							);if
+							(if (eval v)->model->bBox 
+							    (yCoord (lowerLeft (eval v)->model->bBox))
+								(yCoord (lowerLeft (eval v)->model->oCombinedCellView~>bBox))-0.01-(eval v)->model->nMargin
+							);if
+							(if (eval v)->model->bBox
+							    (xCoord (upperRight (eval v)->model->bBox))
+								(xCoord (upperRight (eval v)->model->oCombinedCellView~>bBox))+0.01+(eval v)->model->nMargin
+							);if
+							(if (eval v)->model->bBox
+							    (yCoord (upperRight (eval v)->model->bBox))
+								(yCoord (upperRight (eval v)->model->oCombinedCellView~>bBox))+0.01+(eval v)->model->nMargin
+							);if
 						);lsprintf
 					);setq
 
@@ -698,7 +711,7 @@
 						(eval v)->model->bDebug 			= (eval v)->view->forms->rDebugBooleanButton->value
 						(eval v)->model->nGridSize 			= (eval v)->view->forms->rGridSizeFloatForm->value
 						(eval v)->model->bSplitLayers 		= (eval v)->view->forms->rSplitLayerBooleanButton->value
-						(eval v)->model->nMargin 		= (eval v)->view->forms->rMarginFloatForm->value
+						(eval v)->model->nMargin 			= (eval v)->view->forms->rMarginFloatForm->value
 						
 						(if (and (eval v)->view->forms->rOpenWithStringField->value (greaterp (strlen (eval v)->view->forms->rOpenWithStringField->value) 0)) then
 							(eval v)->model->sOpenWith = (eval v)->view->forms->rOpenWithStringField->value
@@ -743,11 +756,10 @@
 				(eval v)->model->nGridSize = nGridSize
 				(eval v)->model->bSplitLayers = bSplitLayers
 				(eval v)->model->nMargin = nMargin
+				(eval v)->model->bBox = bBox
 
 				(when (eval v)->model->fCheckInout(v)
 					(eval v)->model->fWriteTikZ(v)
-					
-					
 				);when
 				
 				
