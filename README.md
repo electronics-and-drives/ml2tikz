@@ -28,9 +28,8 @@ The function ML2TIKZ must be invoked in the Command Interpreter Window (CIW).
 
 The above shown example function call creates a *tikzpicture* of the maskLayout which is shown in the foreground in a layout editor.
 The result will be written to the directory `"~/myExports"`, which must be read- and writable.
-There, a new directory will be created, where a *.tex* file with the *tikzpicture* of the maskLayout is created.
+There, all files will be created.
 The path to this directory will be returned by the function.
-The directory's name will consist of the library- , cell- and view name plus an additional time stamp.
 
 The function must be provided with a *.tex* file (`"~/myLayerDefinition.tex"` in the example above) where all layer purpose pairs (LPPs) to be considered in the *tikzpicture* must be defined.
 
@@ -87,6 +86,10 @@ A path to a LaTeX file, where all Layer Purpose Pairs (LPPs) considered for expo
 ` sLatexCompiler `
 
 The LaTeX compiler, which should be used. If this parameter is not provided *pdflatex* will be used.
+
+` bBox `
+
+Bounding Box, which is used for export.
 
 `nGridSize`
 
