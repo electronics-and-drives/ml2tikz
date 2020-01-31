@@ -553,11 +553,20 @@
           
           (setq pMakefile (outfile (strcat v->model->sOutDir "Makefile")))
           (fprintf pMakefile "LATEXCOMPILER=%s\n" v->model->sLatexCompiler)
-          (fprintf pMakefile "\nmake:")
+          (fprintf pMakefile "\n")
 
-          (foreach sFileName (reverse lFilesToCompile)
+          (fprintf pMakefile "\nall:")
 
+          (foreach sFileName (reverse (cdr lFilesToCompile))
+            (fprintf pMakefile " %s.pdf" sFileName)
+          );foreach
+
+          (fprintf pMakefile "\n\t${LATEXCOMPILER} %s.tex\n" (car lFilesToCompile))
+
+          (foreach sFileName (reverse (cdr lFilesToCompile))
+            (fprintf pMakefile "\n%s.pdf:" sFileName)
             (fprintf pMakefile "\n\t${LATEXCOMPILER} %s.tex" sFileName)
+            (fprintf pMakefile "\n")
           );foreach
 
           (close pMakefile)
@@ -748,7 +757,7 @@
                 v->model->nGridSize 
                 1.0
               );if
-            ?range (list 0.1 nil)
+            ?range (list 0.0001 nil)
           );hiCreateFloatField
           rGridSizeFloatForm
         );putpropq
