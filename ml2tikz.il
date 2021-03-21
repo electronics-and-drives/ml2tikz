@@ -137,6 +137,9 @@
             (lFilesToCompile nil)
             (lFilesPerLayer nil)
             (lFilesForToplevel nil)
+            (numOfChar 0)
+            (maxNumOfCharPerLine 80)
+            str
           )
 
           ;oFlattenCellView
@@ -411,22 +414,40 @@
 
                 (when (equal oShape~>objType "polygon")
 
-                  (fprintf 
-                    pTikZ 
-                    "\\draw[%s_%s] (%L,%L)" 
-                    (car lLayer) 
-                    (cadr lLayer)
-                    (xCoord (car oShape~>points)) 
-                    (yCoord (car oShape~>points))
-                  );fprintf
+                  (setq
+                    str
+                    (lsprintf
+                      "\\draw[%s_%s] (%L,%L)"
+                      (car lLayer) 
+                      (cadr lLayer)
+                      (xCoord (car oShape~>points)) 
+                      (yCoord (car oShape~>points))
+                    );lsprintf
+                  );setq
+
+                  (setq numOfChar (strlen str))
+
+                  (fprintf pTikZ str)
 
                   (foreach lPoint (cdr oShape~>points)
-                    (fprintf
-                      pTikZ  
-                      " -- (%L,%L)" 
-                      (xCoord lPoint) 
-                      (yCoord lPoint)
-                    );fprintf
+
+                    (setq
+                      str
+                      (lsprintf
+                        " -- (%L,%L)"
+                        (xCoord lPoint)
+                        (yCoord lPoint)
+                      );lsprintf
+                    );setq
+
+                    (setq numOfChar (plus numOfChar (strlen str)))
+
+                    (when (greaterp numOfChar maxNumOfCharPerLine)
+                      (fprintf pTikZ  "\n\t")
+                      (setq numOfChar (plus 2 (strlen str)))
+                    );when
+
+                    (fprintf pTikZ  str)
                   );foreach
 
                   (fprintf pTikZ " -- cycle;\n")
