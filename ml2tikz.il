@@ -138,7 +138,7 @@
             (lFilesPerLayer nil)
             (lFilesForToplevel nil)
             (numOfChar 0)
-            (maxNumOfCharPerLine 80)
+            (maxNumOfCharPerLine 72)
             str
           )
 
@@ -1062,11 +1062,27 @@
 );defun
 
 (defun ML2TIKZUserPostInstallTrigger (args)
-  (hiInsertBannerMenu
-    args->window
-    (ML2TIKZCreateLayoutPulldownMenu)
-    (length (hiGetBannerMenus args->window))
-  );hiInsertBannerMenu
+
+  (let (pulldownMenu)
+
+    (setq pulldownMenu (ML2TIKZCreateLayoutPulldownMenu))
+
+    ;insert pulldown menu when not registered
+    (unless
+      (apply
+        'or
+        (foreach mapcar menu (hiGetBannerMenus args->window)
+          (equal pulldownMenu (eval menu))
+        );foreach
+      );apply
+
+      (hiInsertBannerMenu
+        args->window
+        pulldownMenu
+        (length (hiGetBannerMenus args->window))
+      );hiInsertBannerMenu
+    );unless
+  );let  
 );procedure
 
 (deRegUserTriggers "maskLayout" nil nil 'ML2TIKZUserPostInstallTrigger)
