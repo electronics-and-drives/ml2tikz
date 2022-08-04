@@ -1,6 +1,6 @@
 /*=============================================================================*
 *
-*   ml2tikz
+*   EDml2TikZ
 *
 *   Purpose:    maskLayout to tikzpicture converter
 *
