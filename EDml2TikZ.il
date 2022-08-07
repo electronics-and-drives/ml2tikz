@@ -1540,6 +1540,12 @@
 
             (putpropq 
               dpl->model
+              dpl->view->forms->abeBooleanButton->value
+              bAbe
+            );putpropq
+
+            (putpropq 
+              dpl->model
               dpl->view->forms->makeBooleanButton->value
               bMake
             );putpropq
@@ -1587,7 +1593,6 @@
             );if
 
             (when dpl->model->fCheckInout(dpl)
-
 
               (if dpl->model->bAbe then
                 dpl->model->fWriteTikZwithABE(dpl) 
