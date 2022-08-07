@@ -23,7 +23,7 @@ A more convenient way might be to add this load command in the `.cdsinit`.
 
 ### Command Interpreter Window
 
-The function ML2TIKZ must be invoked in the Command Interpreter Window (CIW).
+The function *EDml2TikZ* must be invoked in the Command Interpreter Window (CIW).
 
 ``` scheme
 (EDml2TikZ ?sOutDir "~/myExports"  ?sLayersLatexFile "~/myLayerDefinition.tex")
@@ -133,7 +133,7 @@ If this value is not provided, no margin is drawn.
 If this parameter is true, the Advanced Boolean Engine (ABE) is used.
 This increases execution time drastically, with the disadvantage that
 only octalinear shapes (90 and 45 degree angles) are considered.
-When this feature is disabled, there must be the possibility to cerate
+When this feature is disabled, there must be the possibility to create
 (temporary) views in the same cell.
 
 `bDebug`
