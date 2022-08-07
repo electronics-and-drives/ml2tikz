@@ -8,14 +8,15 @@
 *   Email:      matthias.schweikardt@reutlingen-university.de
 *
 *   Lint: IQ score is 100 (best is 100) 
-*         {sklint ?file "PATH" ?globals '(ML2TIKZ ML2TIKZLayoutPulldownMenu)}
+*         {sklint ?file "EDml2TikZ.il"}
 *
 *   Revision:   2019-03-29 Created
 *               2019-04-16 Added GUI
 *               2019-06-05 Added margin
 *               2019-12-24 refractured/output dir by user/bBox
+*               2022-08-06 Use advanced boolean engine
 *
-*   Copyright 2019 Reutlingen University (Germany)
+*   Copyright 2022 Reutlingen University, Electronics & Drives (Germany)
 *
 *   Permission is hereby granted, free of charge, to any person obtaining a 
 *   copy of this software and associated documentation files (the "Software"), 
@@ -36,8 +37,10 @@
 *   DEALINGS IN THE SOFTWARE.
 *
 *=============================================================================*/
+
+
 (defun 
-  ML2TIKZ
+  EDml2TikZ
   (
     @key
     (oCellView (geGetWindowCellView))
@@ -46,6 +49,7 @@
     (sLatexCompiler "pdflatex")   
     (nGridSize 1.0)
     (bDebug nil)
+    (xParallelABEruns 1)
     (xShapesPerFile 1000)
     (bSplitLayers nil)
     (bBox nil)
@@ -54,665 +58,943 @@
     (bGraphicalMode nil)
   )
 
-  (let (v)
+  (let (dpl)
 
-    (setq v 'ML2TIKZ)
+    xParallelABEruns ; for lint
 
-    (unless (boundp 'ML2TIKZ)
-      (set 'ML2TIKZ (list nil))
+    (unless (dplp EDml2TikZ.dpl)
+      (putpropq (quote EDml2TikZ) (list nil) dpl)
     );unless
 
-    (setq v (eval v))
-    v->temp = (list nil)
-    v->model = (list nil)
+    (setq dpl EDml2TikZ.dpl)
 
-    (putpropq 
-      v->temp
-      (buildString (parseString (getCurrentTime) ": ") "_")
-      sStartTime 
-    );putpropq
+    (unless dpl->model
+      dpl->model = (list nil)
 
-    ;fReadInLayersLatexFile
-    (putpropq 
-      v->model
-      (lambda (v)
-        (let (s pPort)
 
-          v->model->lLayers = nil
+      ;fReadInLayersLatexFile
+      (putpropq 
+        dpl->model
+        (lambda (dpl)
+          (let (s pPort)
 
-          (when 
-            (and
-              (stringp v->model->sLayersLatexFile)
-              (isFile v->model->sLayersLatexFile)
-              (isReadable v->model->sLayersLatexFile)
-            );and
+            dpl->model->lLayers = nil
 
-            v->model->sLayersLatexFileName = (car (last (parseString v->model->sLayersLatexFile "/")))
+            (when 
+              (and
+                (stringp dpl->model->sLayersLatexFile)
+                (isFile dpl->model->sLayersLatexFile)
+                (isReadable dpl->model->sLayersLatexFile)
+              );and
 
-            (setq pPort (infile v->model->sLayersLatexFile))
+              dpl->model->sLayersLatexFileName = (car (last (parseString dpl->model->sLayersLatexFile "/")))
 
-            (while (gets s pPort)
+              (setq pPort (infile dpl->model->sLayersLatexFile))
 
-              (rexCompile "[ ]*\\tikzstyle{[ ]*\\([a-zA-Z_0-9]*\\)[ ]*}.*")
+              (while (gets s pPort)
 
-              (when (rexExecute s) && (equal (length (parseString (rexSubstitute "\\1") "_")) 2)
-                  (putpropq 
-                      v->model
-                    (cons
-                      (parseString (rexSubstitute "\\1") "_")
-                      v->model->lLayers
-                    );cons
-                    lLayers
-                  );putpropq
-              );when
-            );while
+                (rexCompile "[ ]*\\tikzstyle{[ ]*\\([a-zA-Z_0-9]*\\)[ ]*}.*")
 
-            (putpropq 
-                v->model
-              (reverse v->model->lLayers)
-              lLayers
-            );putpropq  
-          );when
-          v->model->lLayers    
-        );let
-      );lambda
-      fReadInLayersLatexFile
-    );putpropq
+                (when (rexExecute s) && (equal (length (parseString (rexSubstitute "\\1") "_")) 2)
+                    (putpropq 
+                        dpl->model
+                      (cons
+                        (parseString (rexSubstitute "\\1") "_")
+                        dpl->model->lLayers
+                      );cons
+                      lLayers
+                    );putpropq
+                );when
+              );while
 
-    ;fWriteTikZ
-    (putpropq 
-      v->model
-      (lambda (v)
-        (let 
-          ( ;local parameters
-            sStartPhrase
-            sEndPhrase
-            sBoundingBox
-            lShapes
-            (pTikZ nil)
-            pMakefile
-            sTikZFileName
-            (i 0)
-            (xShapeCount 0)
-            (lFilesToCompile nil)
-            (lFilesPerLayer nil)
-            (lFilesForToplevel nil)
-            (numOfChar 0)
-            (maxNumOfCharPerLine 72)
-            str
-          )
+              (putpropq 
+                  dpl->model
+                (reverse dpl->model->lLayers)
+                lLayers
+              );putpropq  
+            );when
+            dpl->model->lLayers    
+          );let
+        );lambda
+        fReadInLayersLatexFile
+      );putpropq
 
-          ;oFlattenCellView
-          (putpropq 
-            v->model
-            (dbOpenCellViewByType 
-              v->model->oSourceCellView~>libName
-              v->model->oSourceCellView~>cellName
-              (strcat 
-                v->model->oSourceCellView~>viewName 
-                "_flatten_" 
-                v->temp->sStartTime
-              );strcat
-              "maskLayout" 
-              "w"
-            );dbOpenCellViewByType
-            oFlattenCellView
-          );putpropq
+      ;fWriteTikZ
+      (putpropq 
+        dpl->model
+        (lambda (dpl)
+          (let 
+            ( ;local parameters
+              sStartPhrase
+              sEndPhrase
+              sBoundingBox
+              (port nil)
+              tikzFileName
+              (i 0)
+              (shapeCount 0)
+              (filesToCompile nil)
+              (filesPerLayer nil)
+              (filesForToplevel nil)
+              (numOfChar 0)
+              (maxNumOfCharPerLine 72)
+              str
+              tileIter
+              abeLayers
+              shape
+            )
 
-          ;oCombinedCellView
-          (putpropq
-            v->model
-            (dbOpenCellViewByType 
-              v->model->oSourceCellView~>libName
-              v->model->oSourceCellView~>cellName
-              (strcat 
-                v->model->oSourceCellView~>viewName 
-                "_combined_" 
-                v->temp->sStartTime
-              );strcat
-              "maskLayout" 
-              "w"
-            );dbOpenCellViewByType
-            oCombinedCellView
-          );putpropq
+            (abeInit 
+              dpl->model->cv
+              ?doInterrupts t
+              ?threads dpl->model->xParallelABEruns
+            );abeInit
 
-          (leFlattenInst 
-            (dbCreateInst 
-              v->model->oFlattenCellView
-              v->model->oSourceCellView
-              "I0" 
-              0:0 
-              "R0"
-            );dbCreateInst
-            /* x_levels */               32
-            /* g_flattenPCells */        t
-            /* g_preservePins */         nil
-            /* g_preserveRODobjs */      nil
-            /* g_delDetachedBlockages */ nil
-            /* g_preservePinFigs */      t
-            /* g_flattenVias */          t
-          );leFlattenInst
-
-          v->model->xNumOfShapes = 0
-
-          (foreach lLayer v->model->lLayers
-            (putpropq
-              v->model
-              (plus
-                v->model->xNumOfShapes
-                (length
-                  (dbLayerOr
-                    v->model->oCombinedCellView
-                    lLayer
-                    (setof 
-                      x 
-                      v->model->oFlattenCellView~>shapes 
-                      (equal x~>lpp lLayer)
-                    );setof
-                  );dbLayerOr
-                );length
-              );plus
-              xNumOfShapes
-            );putpropq
-          );foreach
-
-          (when 
-            (and 
-              (greaterp
-                v->model->xNumOfShapes
-                v->model->xShapesPerFile
-              );greaterp
-              (not v->model->bSplitLayers)
-            );and
-
-            (putpropq 
-              v->model
-              (ceiling
-                (quotient 
-                  v->model->xNumOfShapes
-                  (ceiling 
-                    (times
-                      1.0
-                      (quotient 
-                        v->model->xNumOfShapes
-                        v->model->xShapesPerFile
-                      );quotient
-                    );times
-                  );ceiling
-                );quotient
-              );ceiling
-              xShapesPerFile
-            );putpropq
-          );when
-
-          (dbSave v->model->oFlattenCellView)
-          (dbSave v->model->oCombinedCellView)
-
-          (createDir v->model->sOutDir)
-
-          (shell
-            (strcat 
-              "cp "
-              v->model->sLayersLatexFile 
-              " "
-              v->model->sOutDir 
-              v->model->sLayersLatexFileName
-            );strcat
-          );shell
-
-          (setq
-            sStartPhrase
-            (strcat
-              "\\documentclass{standalone}\n"
-              "\\usepackage{tikz}\n"
-              "\\usepackage{graphicx}\n"
-              "\\input{" v->model->sLayersLatexFileName "}\n"
-              "\\begin{document}\n"
-              "\\begin{tikzpicture}[x=" 
-              (lsprintf "%L" v->model->nGridSize)
-              "cm,y="
-              (lsprintf "%L" v->model->nGridSize)
-              "cm]\n"
-            );strcat
-          );setq
-
-          (setq
-            sBoundingBox
-            (lsprintf
-              (strcat
-                "\\draw[line width = 0mm,white,opacity=1.0]"
-                " (%L,%L) rectangle (%L,%L);\n"
-              );strcat
-              (if v->model->bBox 
-                (xCoord (lowerLeft v->model->bBox))
-                (difference
-                  (xCoord (lowerLeft v->model->oCombinedCellView~>bBox))
-                  (plus v->model->nMargin 0.01)
-                );difference
-              );if
-              (if v->model->bBox 
-                (yCoord (lowerLeft v->model->bBox))
-                (difference
-                  (yCoord (lowerLeft v->model->oCombinedCellView~>bBox))
-                  (plus v->model->nMargin 0.01)
-                );difference
-              );if
-              (if v->model->bBox
-                (xCoord (upperRight v->model->bBox))
-                (plus
-                  (xCoord (upperRight v->model->oCombinedCellView~>bBox))
-                  (plus v->model->nMargin 0.01)
-                );plus
-              );if
-              (if v->model->bBox
-                (yCoord (upperRight v->model->bBox))
-                (plus
-                  (yCoord (upperRight v->model->oCombinedCellView~>bBox))
-                  (plus v->model->nMargin 0.01)
-                );plus
-              );if
-            );lsprintf
-          );setq
-
-          (setq sEndPhrase "\\end{tikzpicture}\n\\end{document}")
-
-          (foreach lLayer v->model->lLayers
-
-            (setq 
-              lShapes 
-              (setof 
-                x 
-                v->model->oCombinedCellView~>shapes 
-                x~>lpp==lLayer
-              );setof
+            (setq
+              abeLayers
+              (foreach mapcar layer dpl->model->lLayers
+                (list
+                  layer
+                  (abeLayerMergeTiles
+                    (abeLayerFromCellView (car layer) ?purpose (cadr layer))
+                    "horizontal"
+                    ?queue t
+                  );abeLayerMergeTiles
+                );list
+              );foreach
             );setq
 
-            (if v->model->bSplitLayers then
+            (abeRunQueue)
 
-              (if v->model->xShapesPerFile >= (length lShapes)  then
+            ;count all shapes
+            (putpropq
+              dpl->model
+              (apply
+                (quote plus)
+                (foreach mapcar abeLayer abeLayers
+                  (getq (cadr abeLayer) numTiles)
+                );foreach
+              );apply
+              xNumOfShapes
+            );putpropq
 
-                (setq
-                  sTikZFileName 
-                  (lsprintf "%s_%s" (car lLayer) (cadr lLayer))
-                );setq
+            ;calculate shapes per file
+            (when 
+              (and 
+                (greaterp
+                  dpl->model->xNumOfShapes
+                  dpl->model->xShapesPerFile
+                );greaterp
+                (not dpl->model->bSplitLayers)
+              );and
 
-                (setq i -1)
-                (setq 
-                  lFilesForToplevel 
-                  (cons sTikZFileName lFilesForToplevel)
-                );setq
-              else
+              (putpropq 
+                dpl->model
+                (ceiling
+                  (quotient 
+                    dpl->model->xNumOfShapes
+                    (ceiling 
+                      (times
+                        1.0
+                        (quotient 
+                          dpl->model->xNumOfShapes
+                          dpl->model->xShapesPerFile
+                        );quotient
+                      );times
+                    );ceiling
+                  );quotient
+                );ceiling
+                xShapesPerFile
+              );putpropq
+            );when
 
-                (setq
-                  sTikZFileName
-                  (lsprintf "%s_%s_0" (car lLayer) (cadr lLayer))
-                );setq
-                (setq i 0)
-                (setq
-                  lFilesPerLayer
-                  (cons sTikZFileName lFilesPerLayer)
-                );setq
-              );if
+            (createDir dpl->model->sOutDir)
 
-              (setq
-                pTikZ
-                (outfile (strcat v->model->sOutDir sTikZFileName ".tex"))
-              );setq
+            (shell
+              (strcat 
+                "cp "
+                dpl->model->sLayersLatexFile 
+                " "
+                dpl->model->sOutDir 
+                dpl->model->sLayersLatexFileName
+              );strcat
+            );shell
 
-              (fprintf pTikZ "%s%s" sStartPhrase sBoundingBox)
-              (setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
-            else
-              (unless (portp pTikZ)
+            (setq
+              sStartPhrase
+              (strcat
+                "\\documentclass{standalone}\n"
+                "\\usepackage{tikz}\n"
+                "\\usepackage{graphicx}\n"
+                "\\input{" dpl->model->sLayersLatexFileName "}\n"
+                "\\begin{document}\n"
+                "\\begin{tikzpicture}[x=" 
+                (lsprintf "%L" dpl->model->nGridSize)
+                "cm,y="
+                (lsprintf "%L" dpl->model->nGridSize)
+                "cm]\n"
+              );strcat
+            );setq
 
-                (if v->model->xNumOfShapes <= v->model->xShapesPerFile  then
+            (setq
+              sBoundingBox
+              (lsprintf
+                (strcat
+                  "\\useasboundingbox"
+                  " (%L,%L) rectangle (%L,%L);\n"
+                );strcat
+                (if dpl->model->bBox 
+                  (xCoord (lowerLeft dpl->model->bBox))
+                  (difference
+                    (xCoord (lowerLeft dpl->model->cv~>bBox))
+                    (plus dpl->model->nMargin 0.01)
+                  );difference
+                );if
+                (if dpl->model->bBox 
+                  (yCoord (lowerLeft dpl->model->bBox))
+                  (difference
+                    (yCoord (lowerLeft dpl->model->cv~>bBox))
+                    (plus dpl->model->nMargin 0.01)
+                  );difference
+                );if
+                (if dpl->model->bBox
+                  (xCoord (upperRight dpl->model->bBox))
+                  (plus
+                    (xCoord (upperRight dpl->model->cv~>bBox))
+                    (plus dpl->model->nMargin 0.01)
+                  );plus
+                );if
+                (if dpl->model->bBox
+                  (yCoord (upperRight dpl->model->bBox))
+                  (plus
+                    (yCoord (upperRight dpl->model->cv~>bBox))
+                    (plus dpl->model->nMargin 0.01)
+                  );plus
+                );if
+              );lsprintf
+            );setq
+
+            (setq
+              sEndPhrase
+              "\\end{tikzpicture}\n\\end{document}"
+            );setq
+
+            (foreach abeLayer abeLayers
+
+              (setq tileIter (abeIslandIterator (cadr abeLayer)))
+
+              (if dpl->model->bSplitLayers then
+
+                (if 
+                  (geqp
+                    dpl->model->xShapesPerFile
+                    (getq (cadr abeLayer) numTiles)
+                  );geqp
+                then
+
+                  (setq
+                    tikzFileName 
+                    (lsprintf "%s_%s" (caar abeLayer) (cadar abeLayer))
+                  );setq
+
+                  (setq i -1)
 
                   (setq 
-                    sTikZFileName 
-                    (lsprintf 
-                      "%s_%s_%s" 
-                      v->model->oSourceCellView~>libName
-                      v->model->oSourceCellView~>cellName
-                      v->model->oSourceCellView~>viewName
-                    );lsprintf
+                    filesForToplevel 
+                    (cons tikzFileName filesForToplevel)
                   );setq
-                  
+
+                  ;(setq filesToCompile (cons tikzFileName filesToCompile))
                 else
 
-                  (setq sTikZFileName "0")  
-                  (setq 
-                    lFilesForToplevel 
-                    (cons sTikZFileName lFilesForToplevel)
+                  (setq
+                    tikzFileName
+                    (lsprintf "%s_%s_0" (caar abeLayer) (cadar abeLayer))
+                  );setq
+
+                  (setq i 0)
+
+                  (setq
+                    filesPerLayer
+                    (cons tikzFileName filesPerLayer)
                   );setq
                 );if
 
-                (setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
                 (setq
-                  pTikZ 
-                  (outfile (strcat v->model->sOutDir sTikZFileName ".tex"))
-                );setq  
-                (fprintf pTikZ "%s%s" sStartPhrase sBoundingBox)
+                  port
+                  (outfile (strcat dpl->model->sOutDir tikzFileName ".tex"))
+                );setq
 
-              );unless
-            );if
-
-            (foreach oShape lShapes
-
-              (if (equal oShape~>objType "rect") then
-
-                (fprintf 
-                  pTikZ
-                  "\\draw[%s_%s] (%L,%L) rectangle (%L,%L);\n" 
-                  (car lLayer)
-                  (cadr lLayer)
-                  (xCoord (lowerLeft oShape~>bBox))
-                  (yCoord (lowerLeft oShape~>bBox))  
-                  (xCoord (upperRight oShape~>bBox))
-                  (yCoord (upperRight oShape~>bBox))
-                );fprintf
-
+                (fprintf port "%s%s" sStartPhrase sBoundingBox)
               else
+                
+                (unless (portp port)
 
-                (when (equal oShape~>objType "polygon")
+                  (if 
+                    (leqp
+                      dpl->model->xNumOfShapes
+                      dpl->model->xShapesPerFile
+                    );leqp
+                  then
+
+                    (setq 
+                      tikzFileName 
+                      (lsprintf 
+                        "%s_%s_%s" 
+                        dpl->model->cv~>libName
+                        dpl->model->cv~>cellName
+                        dpl->model->cv~>viewName
+                      );lsprintf
+                    );setq
+                    
+                  else
+
+                    (setq tikzFileName "0")  
+
+                    (setq 
+                      filesForToplevel 
+                      (cons tikzFileName filesForToplevel)
+                    );setq
+                  );if
+
+                  (setq filesToCompile (cons tikzFileName filesToCompile))
+                  (setq
+                    port 
+                    (outfile (strcat dpl->model->sOutDir tikzFileName ".tex"))
+                  );setq  
+                  (fprintf port "%s%s" sStartPhrase sBoundingBox)
+                );unless
+              );if
+
+              (while (setq shape tileIter->next)
+
+                (setq
+                  str
+                  (lsprintf
+                    "\\draw[%s_%s] (%L,%L)"
+                    (caar abeLayer) 
+                    (cadar abeLayer)
+                    (xCoord (car shape))
+                    (yCoord (cadr shape))
+                  );lsprintf
+                );setq
+
+                (setq numOfChar (strlen str))
+
+                (fprintf port str)
+
+                (foreach point (cdr shape)
 
                   (setq
                     str
                     (lsprintf
-                      "\\draw[%s_%s] (%L,%L)"
-                      (car lLayer) 
-                      (cadr lLayer)
-                      (xCoord (car oShape~>points)) 
-                      (yCoord (car oShape~>points))
+                      " -- (%L,%L)"
+                      (xCoord point)
+                      (yCoord point)
                     );lsprintf
                   );setq
 
-                  (setq numOfChar (strlen str))
+                  (setq numOfChar (plus numOfChar (strlen str)))
 
-                  (fprintf pTikZ str)
+                  (when (greaterp numOfChar maxNumOfCharPerLine)
+                    (fprintf port  "\n\t")
+                    (setq numOfChar (plus 2 (strlen str)))
+                  );when
 
-                  (foreach lPoint (cdr oShape~>points)
+                  (fprintf port  str)
+                );foreach
 
-                    (setq
-                      str
-                      (lsprintf
-                        " -- (%L,%L)"
-                        (xCoord lPoint)
-                        (yCoord lPoint)
+                (fprintf port " -- cycle;\n")
+
+                (preincrement shapeCount)
+
+                (when (geqp shapeCount dpl->model->xShapesPerFile)
+
+                  (fprintf port "%s" sEndPhrase)
+                  (close port)
+
+                  (if dpl->model->bSplitLayers then
+                    (setq 
+                      tikzFileName 
+                      (lsprintf 
+                        "%s_%s_%L" 
+                        (caar abeLayer) 
+                        (cadar abeLayer) 
+                        (preincrement i)
                       );lsprintf
                     );setq
 
-                    (setq numOfChar (plus numOfChar (strlen str)))
+                    (setq filesPerLayer (cons tikzFileName filesPerLayer))
+                  else
 
-                    (when (greaterp numOfChar maxNumOfCharPerLine)
-                      (fprintf pTikZ  "\n\t")
-                      (setq numOfChar (plus 2 (strlen str)))
-                    );when
+                    (setq tikzFileName (lsprintf "%L" (preincrement i)))
+                    (setq
+                      filesForToplevel
+                      (cons tikzFileName filesForToplevel)
+                    );setq
+                    (setq filesToCompile (cons tikzFileName filesToCompile))
+                  );if
 
-                    (fprintf pTikZ  str)
+                  (setq
+                    port 
+                    (outfile (strcat dpl->model->sOutDir tikzFileName ".tex"))
+                  );setq
+
+                  (fprintf port "%s%s" sStartPhrase sBoundingBox)
+                  
+                  (setq shapeCount 0)
+                );when
+              );while
+              
+              (when dpl->model->bSplitLayers
+
+                (fprintf port "%s" sEndPhrase)
+                (close port)
+
+                (when (geqp i 0)
+      
+                  (setq
+                    tikzFileName 
+                    (lsprintf "layout_%s_%s" (caar abeLayer) (cadar abeLayer))
+                  );setq
+
+                  (setq
+                    port
+                    (outfile (strcat dpl->model->sOutDir tikzFileName ".tex"))
+                  );setq
+
+                  (fprintf port "%s" sStartPhrase)
+
+                  (setq
+                    filesToCompile
+                    (cons 
+                      (append
+                        (list tikzFileName)
+                        (reverse filesPerLayer)
+                      );append
+                      filesToCompile
+                    );cons
+                  );setq
+
+                  (foreach fileName (reverse filesPerLayer)
+                    (fprintf
+                      port 
+                      "\\node at (0,0) {\\includegraphics{%s.pdf}};\n" 
+                      fileName
+                    );fprintf
                   );foreach
 
-                  (fprintf pTikZ " -- cycle;\n")
+                  (fprintf port "%s" sEndPhrase)
+                  (close port)
 
-                );when
-              );if
-
-              (preincrement xShapeCount)
-
-              (when xShapeCount >= v->model->xShapesPerFile
-
-                (fprintf pTikZ "%s" sEndPhrase)
-                (close pTikZ)
-
-                (if v->model->bSplitLayers then
-                  (setq 
-                    sTikZFileName 
-                    (lsprintf 
-                      "%s_%s_%L" 
-                      (car lLayer) 
-                      (cadr lLayer) 
-                      (preincrement i)
-                    );lsprintf
-                  );setq
-                  (setq lFilesPerLayer (cons sTikZFileName lFilesPerLayer))
-                else
-
-                  (setq sTikZFileName (lsprintf "%L" (preincrement i)))
                   (setq
-                    lFilesForToplevel
-                    (cons sTikZFileName lFilesForToplevel)
+                    filesForToplevel
+                    (cons tikzFileName filesForToplevel)
                   );setq
-                );if
 
-                (setq
-                  pTikZ 
-                  (outfile (strcat v->model->sOutDir sTikZFileName ".tex"))
-                );setq
-                (fprintf pTikZ "%s%s" sStartPhrase sBoundingBox)
-                (setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
-
-                (setq xShapeCount 0)
-              );when
+                  (setq filesPerLayer nil)
+                  (setq i 0)  
+                  (setq shapeCount 0)
+                );when
+              );when    
             );foreach
+
+            (unless dpl->model->bSplitLayers
+              (fprintf port "%s" sEndPhrase)
+              (close port)
+            );unless
+
+            (when filesForToplevel
+
+              (setq 
+                tikzFileName 
+                (lsprintf 
+                  "%s_%s_%s" 
+                  dpl->model->cv~>libName  
+                  dpl->model->cv~>cellName 
+                  dpl->model->cv~>viewName
+                );lsprintf
+              );setq
+
+              (setq 
+                port 
+                (outfile (strcat dpl->model->sOutDir tikzFileName ".tex"))
+              );setq
+
+              (fprintf port "%s" sStartPhrase)
+
+              (setq filesToCompile (cons tikzFileName filesToCompile))
+
+              (foreach fileName (reverse filesForToplevel)
+                (fprintf
+                  port 
+                  "\\node at (0,0) {\\includegraphics{%s.pdf}};\n" 
+                  fileName
+                );fprintf
+              );foreach
+
+              (fprintf port "%s" sEndPhrase)
+              (close port)             
+            );when
             
-            (when v->model->bSplitLayers
+            (setq port (outfile (strcat dpl->model->sOutDir "Makefile")))
+            (fprintf port "LATEXCOMPILER=%s\n" dpl->model->sLatexCompiler)
+            (fprintf port "\n")
 
-              (fprintf pTikZ "%s" sEndPhrase)
-              (close pTikZ)
+            (fprintf port "\nall:")
 
-              (when (geqp i 0)
-    
-                (setq
-                  sTikZFileName 
-                  (lsprintf "layout_%s_%s" (car lLayer) (cadr lLayer))
-                );setq
+            (foreach file (reverse (cdr filesToCompile))
+              (if (listp file)
+                (fprintf port " %s.pdf" (car file))
+                (fprintf port " %s.pdf" file)
+              );if
+            );foreach
 
-                (setq
-                  pTikZ
-                  (outfile (strcat v->model->sOutDir sTikZFileName ".tex"))
-                );setq
+            (fprintf port "\n\t${LATEXCOMPILER} %s.tex\n" (car filesToCompile))
 
-                (fprintf pTikZ "%s" sStartPhrase)
+            (foreach file (reverse (cdr filesToCompile))
 
-                (setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
+              (if (listp file) then
 
-                (foreach sFileName (reverse lFilesPerLayer)
-                  (fprintf
-                    pTikZ 
-                    "\\node at (0,0) {\\includegraphics{%s.pdf}};\n" 
-                    sFileName
-                  );fprintf
+                (fprintf port "\n%s.pdf:" (car file))
+
+                (foreach item (cdr file)
+                  (fprintf port " %s.pdf" item)    
                 );foreach
 
-                (fprintf pTikZ "%s" sEndPhrase)
-                (close pTikZ)
+                (fprintf port "\n\t${LATEXCOMPILER} %s.tex" (car file))
+                (fprintf port "\n")
 
-                (setq lFilesForToplevel (cons sTikZFileName lFilesForToplevel))
+                (foreach item (cdr file)
+                  (fprintf port "\n%s.pdf:" item)
+                  (fprintf port "\n\t${LATEXCOMPILER} %s.tex" item)
+                  (fprintf port "\n")
+                );foreach
 
-                (setq lFilesPerLayer nil)
-                (setq i 0)  
-                (setq xShapeCount 0)
-              );when
-            );when    
-          );foreach
-
-          (unless v->model->bSplitLayers
-            (fprintf pTikZ "%s" sEndPhrase)
-            (close pTikZ)
-          );unless
-
-          (when lFilesForToplevel
-
-            (setq 
-              sTikZFileName 
-              (lsprintf 
-                "%s_%s_%s" 
-                v->model->oSourceCellView~>libName  
-                v->model->oSourceCellView~>cellName 
-                v->model->oSourceCellView~>viewName
-              );lsprintf
-            );setq
-
-            (setq 
-              pTikZ 
-              (outfile (strcat v->model->sOutDir sTikZFileName ".tex"))
-            );setq
-
-            (fprintf pTikZ "%s" sStartPhrase)
-
-            (setq lFilesToCompile (cons sTikZFileName lFilesToCompile))
-
-            (foreach sFileName (reverse lFilesForToplevel)
-              (fprintf
-                pTikZ 
-                "\\node at (0,0) {\\includegraphics{%s.pdf}};\n" 
-                sFileName
-              );fprintf
+              else
+                (fprintf port "\n%s.pdf:" file)
+                (fprintf port "\n\t${LATEXCOMPILER} %s.tex" file)
+                (fprintf port "\n")
+              );if
             );foreach
 
-            (fprintf pTikZ "%s" sEndPhrase)
-            (close pTikZ)             
-          );when
-          
-          (setq pMakefile (outfile (strcat v->model->sOutDir "Makefile")))
-          (fprintf pMakefile "LATEXCOMPILER=%s\n" v->model->sLatexCompiler)
-          (fprintf pMakefile "\n")
+            (close port)
+            
+            (when dpl->model->bMake 
+              (shell (strcat "cd " dpl->model->sOutDir "\n" "make"))
+            );when
 
-          (fprintf pMakefile "\nall:")
+            (abeDone)
 
-          (foreach sFileName (reverse (cdr lFilesToCompile))
-            (fprintf pMakefile " %s.pdf" sFileName)
-          );foreach
-
-          (fprintf pMakefile "\n\t${LATEXCOMPILER} %s.tex\n" (car lFilesToCompile))
-
-          (foreach sFileName (reverse (cdr lFilesToCompile))
-            (fprintf pMakefile "\n%s.pdf:" sFileName)
-            (fprintf pMakefile "\n\t${LATEXCOMPILER} %s.tex" sFileName)
-            (fprintf pMakefile "\n")
-          );foreach
-
-          (close pMakefile)
-          
-          (when v->model->bMake 
-            (shell (strcat "cd " v->model->sOutDir "\n" "make"))
-          );when
-
-          (let (dFlattenCellView dCombinedCellView)
-
-            (setq
-              dFlattenCellView
-              (ddGetObj
-                v->model->oFlattenCellView~>libName
-                v->model->oFlattenCellView~>cellName
-                v->model->oFlattenCellView~>viewName
-              );ddGetObj
-            );setq
-
-            (setq
-              dCombinedCellView
-              (ddGetObj
-                v->model->oCombinedCellView~>libName
-                v->model->oCombinedCellView~>cellName
-                v->model->oCombinedCellView~>viewName
-              );ddGetObj
-            );setq
-
-            (dbClose v->model->oFlattenCellView)
-            (dbClose v->model->oCombinedCellView)
-
-            (unless v->model->bDebug
-              (ddDeleteObj dFlattenCellView)
-              (ddDeleteObj dCombinedCellView)
-            );unless
+            dpl->model->sOutDir
           );let
-        
-          v->model->sOutDir
-        );let
-      );lambda
-      fWriteTikZ
-    );putpropq
+        );lambda
+        fWriteTikZ
+      );putpropq
 
-    ;fCheckInout
-    (putpropq 
-      v->model
-      (lambda (v)
-        (and
-          (if v->model->fReadInLayersLatexFile(v) then
-            t
-          else
-            (fprintf
-              errport
-              "*mL2TikZ* No valid layers in %L\n"
-              v->model->sLayersLatexFile
-            );fprintf
-            nil
-          );if
-          (if 
-            (or 
-              (and
-                (isDir v->model->sOutDir)
-                (isWritable v->model->sOutDir)
+      ;fCheckInout
+      (putpropq 
+        dpl->model
+        (lambda (dpl)
+          (and
+            (if dpl->model->fReadInLayersLatexFile(dpl) then
+              t
+            else
+              (fprintf
+                errport
+                "*[ED] ml2TikZ* No valid layers in %L\n"
+                dpl->model->sLayersLatexFile
+              );fprintf
+              nil
+            );if
+            (if 
+              (or 
+                (and
+                  (isDir dpl->model->sOutDir)
+                  (isWritable dpl->model->sOutDir)
+                );and
+                (and
+                  (createDir dpl->model->sOutDir)
+                  (deleteDir dpl->model->sOutDir)
+                );and
+              );or
+            then
+
+              (putpropq 
+                dpl->model
+                (strcat 
+                  "/" 
+                  (buildString
+                    (parseString (simplifyFilename dpl->model->sOutDir) "/") 
+                    "/"
+                  );buildString
+                  "/"
+                );strcat
+                sOutDir
+              );putpropq
+
+            else
+              (fprintf
+                errport
+                "*[ED] ml2TikZ* No valid output directory is specified\n"
+              );fprintf
+              nil
+            );if
+
+            (if 
+              (and 
+                (fixp dpl->model->xShapesPerFile)
+                (greaterp dpl->model->xShapesPerFile 0)
+              );and 
+            then
+              t
+            else
+              dpl->model->xShapesPerFile = 1000
+            );if
+
+            (if (stringp dpl->model->sLatexCompiler) then
+              t
+            else
+              (fprintf errport "*[ED] ml2TikZ* No LaTeX compiler specified\n")
+              nil
+            );if
+
+            (if 
+              (and 
+                (numberp dpl->model->nGridSize) 
+                (greaterp dpl->model->nGridSize 0)
               );and
-              (and
-                (createDir v->model->sOutDir)
-                (deleteDir v->model->sOutDir)
-              );and
-            );or
-          then
+            then
+              t
+            else
+              (fprintf errport "*[ED] ml2TikZ* No valid grid size specified\n")
+              nil
+            );if
+          );and
+        );lambda
+        fCheckInout
+      );putpropq
+    );unless
+
+    (when bGraphicalMode
+      (unless dpl->view
+        dpl->view = (list nil)
+        dpl->view->forms = (list nil)
+        dpl->view->callbacks = (list nil)
+
+        ;outDirFileSelectorField
+        (putpropq 
+          dpl->view->forms
+          (hiCreateFileSelectorField
+            ?name (quote outDirFileSelectorField)
+            ?mode (quote directoryOnly)
+            ?prompt "Output Directory"
+            ?value ""
+          );hiCreateFileSelectorField
+          outDirFileSelectorField
+        );putpropq
+
+        ;latexFileFileSelectorField
+        (putpropq 
+          dpl->view->forms
+          (hiCreateFileSelectorField
+            ?name (quote latexFileFileSelectorField)
+            ?mode (quote existingFile)
+            ?prompt "Layers Latex File"
+            ?value
+              (if dpl->model->sLayersLatexFile then
+                dpl->model->sLayersLatexFile
+              else
+                " "
+              );if
+          );hiCreateFileSelectorField
+          latexFileFileSelectorField
+        );putpropq
+
+        ;gridSizeFloatForm
+        (putpropq 
+          dpl->view->forms
+          (hiCreateFloatField
+            ?name (quote gridSizeFloatForm)
+            ?prompt "Grid Size [cm]"
+            ?value 
+              (if (numberp dpl->model->nGridSize) 
+                dpl->model->nGridSize 
+                1.0
+              );if
+            ?range (list 0.0001 nil)
+          );hiCreateFloatField
+          gridSizeFloatForm
+        );putpropq
+        
+        ;marginFloatForm
+        (putpropq 
+          dpl->view->forms
+          (hiCreateFloatField
+            ?name (quote marginFloatForm)
+            ?prompt "Margin"
+            ?value 
+              (if (numberp dpl->model->nMargin)
+                dpl->model->nMargin
+                0.0
+              );if
+            ?range (list 0.0 nil)
+          );hiCreateFloatField
+          marginFloatForm
+        );putpropq
+
+        ;latexCompilerStringField
+        (putpropq 
+          dpl->view->forms
+          (hiCreateStringField
+            ?name (quote latexCompilerStringField)
+            ?prompt "Latex Compiler"
+            ?value 
+              (if (stringp dpl->model->sLatexCompiler)
+                dpl->model->sLatexCompiler 
+                "pdflatex"
+              );if
+          );hiCreateStringField
+          latexCompilerStringField
+        );putpropq
+
+        ;parallelABEruns
+        (putpropq 
+          dpl->view->forms
+          (hiCreateIntField
+            ?name (quote parallelABEruns)
+            ?prompt "# Parallel ABE runs"
+            ?editable nil
+            ?value 
+              1
+              ;(if (fixp dpl->model->xParallelABEruns)
+              ;  dpl->model->xParallelABEruns
+              ;  1
+              ;);if
+            ?range (list 1 "infinity")
+          );hiCreateIntField
+          parallelABEruns
+        );putpropq
+
+        ;shapesPerFileIntField
+        (putpropq 
+          dpl->view->forms
+          (hiCreateIntField
+            ?name (quote shapesPerFileIntField)
+            ?prompt "# Shapes per File"
+            ?value 
+              (if (fixp dpl->model->xShapesPerFile)
+                dpl->model->xShapesPerFile
+                1000
+              );if
+            ?range (list 1 "infinity")
+          );hiCreateIntField
+          shapesPerFileIntField
+        );putpropq
+        
+        ;openWithStringField
+        (putpropq 
+          dpl->view->forms
+          (hiCreateStringField
+            ?name  (quote openWithStringField)
+            ?prompt "Open with"
+            ?value 
+              (if (stringp dpl->model->sOpenWith) 
+                dpl->model->sOpenWith 
+                ""
+              );if
+          );hiCreateStringField
+          openWithStringField
+        );putpropq
+
+        ;splitLayerBooleanButton
+        (putpropq 
+          dpl->view->forms
+          (hiCreateBooleanButton
+            ?name (quote splitLayerBooleanButton)
+            ?buttonText "Split Layers"
+            ?value dpl->model->bSplitLayers
+          );hiCreateBooleanButton
+          splitLayerBooleanButton
+        );putpropq
+
+        ;makeBooleanButton
+        (putpropq 
+          dpl->view->forms
+          (hiCreateBooleanButton
+            ?name (quote makeBooleanButton)
+            ?buttonText "Make"
+            ?defValue dpl->model->bMake
+          );hiCreateBooleanButton
+          makeBooleanButton
+        );putpropq
+
+        ;debugBooleanButton
+        (putpropq 
+          dpl->view->forms
+          (hiCreateBooleanButton
+            ?name (quote debugBooleanButton)
+            ?buttonText "Debug"
+            ?defValue dpl->model->bDebug
+          );hiCreateBooleanButton
+          debugBooleanButton
+        );putpropq
+
+        ;EDml2TikZFormLayout
+        (putpropq 
+          dpl->view->forms
+          (hiCreateFormLayout
+            (quote EDml2TikZFormLayout)
+            ?frame "EDml2TikZFormLayout"
+            ?items
+              (foreach mapcar form dpl->view->forms->?
+                (get dpl->view->forms form)
+              );foreach
+          );hiCreateFormLayout
+          EDml2TikZFormLayout
+        );putpropq
+
+        ;EDml2TikZLayoutForm
+        (putpropq
+          dpl->view->forms
+          (hiCreateLayoutForm
+            (quote EDml2TikZLayoutForm)
+            "[ED] maskLayout 2 TikZ"
+            dpl->view->forms->EDml2TikZFormLayout
+            ?sizePolicy (quote fixed)
+            ?dialogStyle (quote modal)
+            ?buttonLayout (quote OKCancelApply)
+            ?callback
+              (list
+                (strcat 
+                  "EDml2TikZ.dpl->view->callbacks"
+                  "->fExecuteMl2TikZ(EDml2TikZ.dpl)"
+                );strcat
+                "nil"
+              );list
+            ?buttonDisabled (list (quote Help))
+          );hiCreateLayoutForm
+          EDml2TikZLayoutForm
+        );putpropq
+        
+        ;fExecuteMl2TikZ
+        (putpropq
+          dpl->view->callbacks
+          (lambda (dpl)
 
             (putpropq 
-              v->model
-              (strcat 
-                "/" 
-                (buildString
-                  (parseString (simplifyFilename v->model->sOutDir) "/") 
-                  "/"
-                );buildString
-                "/"
-              );strcat
+              dpl->model
+              (simplifyFilename
+                dpl->view->forms->latexFileFileSelectorField->value
+              );simplifyFilename
+              sLayersLatexFile
+            );putpropq
+
+            (putpropq 
+              dpl->model
+              dpl->view->forms->outDirFileSelectorField->value
               sOutDir
             );putpropq
 
-          else
-            (fprintf
-              errport
-              "*mL2TikZ* No valid output directory is specified\n"
-            );fprintf
-            nil
-          );if
+            (putpropq 
+              dpl->model
+              dpl->view->forms->parallelABEruns->value
+              xParallelABEruns
+            );putpropq            
 
-          (if 
-            (and 
-              (fixp v->model->xShapesPerFile)
-              (greaterp v->model->xShapesPerFile 0)
-            );and 
-          then
-            t
-          else
-            v->model->xShapesPerFile = 1000
-          );if
+            (putpropq 
+              dpl->model
+              dpl->view->forms->shapesPerFileIntField->value
+              xShapesPerFile
+            );putpropq
+            
+            (putpropq 
+              dpl->model
+              dpl->view->forms->latexCompilerStringField->value
+              sLatexCompiler
+            );putpropq
 
-          (if (stringp v->model->sLatexCompiler) then
-            t
-          else
-            (fprintf errport "*mL2TikZ* No LaTeX compiler specified\n")
-            nil
-          );if
+            (putpropq 
+              dpl->model
+              dpl->view->forms->makeBooleanButton->value
+              bMake
+            );putpropq
+            
+            (putpropq 
+              dpl->model
+              dpl->view->forms->debugBooleanButton->value
+              bDebug
+            );putpropq
 
-          (if 
-            (and 
-              (numberp v->model->nGridSize) 
-              (greaterp v->model->nGridSize 0)
-            );and
+            (putpropq 
+              dpl->model
+              dpl->view->forms->gridSizeFloatForm->value
+              nGridSize
+            );putpropq
+            
+            (putpropq 
+              dpl->model
+              dpl->view->forms->splitLayerBooleanButton->value
+              bSplitLayers
+            );putpropq 
 
-          then
-              t
-          else
-            (fprintf errport "*mL2TikZ* No valid grid size specified\n")
-            nil
-          );if
-        );and
-      );lambda
-      fCheckInout
+            (putpropq 
+              dpl->model
+              dpl->view->forms->marginFloatForm->value
+              nMargin
+            );putpropq             
+
+            (if 
+              (and 
+                dpl->view->forms->openWithStringField->value 
+                (greaterp 
+                  (strlen dpl->view->forms->openWithStringField->value) 
+                  0
+                );greaterp
+              );and
+            then
+              (putpropq 
+                dpl->model
+                dpl->view->forms->openWithStringField->value
+                sOpenWith 
+              );putpropq
+            else
+              dpl->model->sOpenWith = nil
+            );if
+
+            (when dpl->model->fCheckInout(dpl)
+            
+              dpl->model->fWriteTikZ(dpl)
+              
+              (if dpl->model->sOpenWith
+                (system 
+                  (strcat 
+                    dpl->model->sOpenWith
+                    " " 
+                    dpl->model->sOutDir
+                  );strcat
+                );system
+                (hiDisplayAppDBox 
+                  ?name (quote rEDml2TikZres) 
+                  ?dboxBanner "[ED] maskLayout 2 TikZ Result" 
+                  ?dboxText dpl->model->sOutDir
+                  ?dialogType 3 
+                  ?buttonLayout (quote Close)
+                );hiDisplayAppDBox
+              );if
+            );when
+          );lambda
+          fExecuteMl2TikZ
+        );putpropq
+      );unless
+    );when
+
+    dpl->temp = (list nil)
+
+    ;get and format current time
+    (putpropq 
+      dpl->temp
+      (buildString (parseString (getCurrentTime) ": ") "_")
+      sStartTime 
     );putpropq
 
     (if   
@@ -721,369 +1003,124 @@
         (dbIsId oCellView)
         (equal "maskLayout" oCellView~>cellViewType)
       );and
-      
-      then
+    then
 
-      v->model->oSourceCellView = oCellView
+      dpl->model->cv = oCellView
 
       (if bGraphicalMode then
 
-        v->view = (list nil)
-        v->view->forms = (list nil)
-        v->view->callbacks = (list nil)
-
-        ;rOutDirFileSelectorField
-        (putpropq 
-          v->view->forms
-          (hiCreateFileSelectorField
-            ?name 'rOutDirFileSelectorField
-            ?mode 'directoryOnly
-            ?prompt "Output Dir"
-            ?value
-                    (lsprintf
-                      "./%s_%s_%s"
-                      v->model->oSourceCellView~>libName
-                      v->model->oSourceCellView~>cellName
-                      v->model->oSourceCellView~>viewName
-                    );lsprintf
-          );hiCreateFileSelectorField
-          rOutDirFileSelectorField
-        );putpropq
-
-        ;rLatexFileFileSelectorField
-        (putpropq 
-          v->view->forms
-          (hiCreateFileSelectorField
-            ?name 'rLatexFileFileSelectorField
-            ?mode 'existingFile
-            ?prompt "Layers Latex File"
-            ?value
-              (if v->model->sLayersLatexFile then
-                v->model->sLayersLatexFile
-              else
-                " "
-              );if
-          );hiCreateFileSelectorField
-          rLatexFileFileSelectorField
-        );putpropq
-
-        ;rGridSizeFloatForm
-        (putpropq 
-          v->view->forms
-          (hiCreateFloatField
-            ?name 'rGridSizeFloatForm
-            ?prompt "Grid Size [cm]"
-            ?value 
-              (if (numberp v->model->nGridSize) 
-                v->model->nGridSize 
-                1.0
-              );if
-            ?range (list 0.0001 nil)
-          );hiCreateFloatField
-          rGridSizeFloatForm
-        );putpropq
-        
-        ;rMarginFloatForm
-        (putpropq 
-          v->view->forms
-          (hiCreateFloatField
-            ?name 'rMarginFloatForm
-            ?prompt "Margin"
-            ?value 
-              (if (numberp v->model->nMargin)
-                v->model->nMargin
-                0.0
-              );if
-            ?range (list 0.0 nil)
-          );hiCreateFloatField
-          rMarginFloatForm
-        );putpropq
-
-        ;rLatexCompilerStringField
-        (putpropq 
-          v->view->forms
-          (hiCreateStringField
-            ?name 'rLatexCompilerStringField
-            ?prompt "Latex Compiler"
-            ?value 
-              (if (stringp v->model->sLatexCompiler)
-                v->model->sLatexCompiler 
-                "pdflatex"
-              );if
-          );hiCreateStringField
-          rLatexCompilerStringField
-        );putpropq
-
-        ;rShapesPerFileIntField
-        (putpropq 
-          v->view->forms
-          (hiCreateIntField
-            ?name 'rShapesPerFileIntField
-            ?prompt "# Shapes per File"
-            ?value 
-              (if (fixp v->model->xShapesPerFile)
-                v->model->xShapesPerFile
-                1000
-              );if
-            ?range (list 1 "infinity")
-          );hiCreateIntField
-          rShapesPerFileIntField
-        );putpropq
-        
-        ;rOpenWithStringField
-        (putpropq 
-          v->view->forms
-          (hiCreateStringField
-            ?name 'rOpenWithStringField
-            ?prompt "Open with"
-            ?value 
-              (if (stringp v->model->sOpenWith) 
-                v->model->sOpenWith 
-                ""
-              );if
-          );hiCreateStringField
-          rOpenWithStringField
-        );putpropq
-
-        ;rSplitLayerBooleanButton
-        (putpropq 
-          v->view->forms
-          (hiCreateBooleanButton
-            ?name 'rSplitLayerBooleanButton
-            ?buttonText "Split Layers"
-            ?value v->model->bSplitLayers
-          );hiCreateBooleanButton
-          rSplitLayerBooleanButton
-        );putpropq
-
-        ;rMakeBooleanButton
-        (putpropq 
-          v->view->forms
-          (hiCreateBooleanButton
-            ?name 'rMakeBooleanButton
-            ?buttonText "Make"
-            ?defValue v->model->bMake
-          );hiCreateBooleanButton
-          rMakeBooleanButton
-        );putpropq
-
-        ;rDebugBooleanButton
-        (putpropq 
-          v->view->forms
-          (hiCreateBooleanButton
-            ?name 'rDebugBooleanButton
-            ?buttonText "Debug"
-            ?defValue v->model->bDebug
-          );hiCreateBooleanButton
-          rDebugBooleanButton
-        );putpropq
-
-        ;rML2TIKZFormLayout
-        (putpropq 
-          v->view->forms
-          (hiCreateFormLayout
-            'rML2TIKZFormLayout
-            ?frame "rML2TIKZFormLayout"
-            ?items
-              (foreach mapcar sForm v->view->forms->?
-                (get v->view->forms sForm)
-              );foreach
-          );hiCreateFormLayout
-          rML2TIKZFormLayout
-        );putpropq
-
-        ;rML2TIKZLayoutForm
         (putpropq
-          v->view->forms
-          (hiCreateLayoutForm
-            'rML2TIKZLayoutForm
-            "ML2TikZ"
-            v->view->forms->rML2TIKZFormLayout
-            ?sizePolicy 'fixed
-            ?dialogStyle 'modal
-            ?buttonLayout 'OKCancelApply
-            ?callback
-              (list
-                (strcat 
-                  "(eval 'ML2TIKZ)->view->callbacks"
-                  "->fExecuteML2TIKZ((eval 'ML2TIKZ))"
-                );strcat
-                "nil"
-              );list
-            ?buttonDisabled (list 'Help)
-          );hiCreateLayoutForm
-          rML2TIKZLayoutForm
-        );putpropq
-        
-        ;fExecuteML2TIKZ
-        (putpropq
-          v->view->callbacks
-          (lambda (v)
-
-            (putpropq 
-              v->model
-              (simplifyFilename v->view->forms->rLatexFileFileSelectorField->value)
-              sLayersLatexFile
-            );putpropq
-
-            (putpropq 
-              v->model
-              v->view->forms->rOutDirFileSelectorField->value
-              sOutDir
-            );putpropq
-
-            (putpropq 
-              v->model
-              v->view->forms->rShapesPerFileIntField->value
-              xShapesPerFile
-            );putpropq
-            
-            (putpropq 
-              v->model
-              v->view->forms->rLatexCompilerStringField->value
-              sLatexCompiler
-            );putpropq
-
-            (putpropq 
-              v->model
-              v->view->forms->rMakeBooleanButton->value
-              bMake
-            );putpropq
-            
-            (putpropq 
-              v->model
-              v->view->forms->rDebugBooleanButton->value
-              bDebug
-            );putpropq
-
-            (putpropq 
-              v->model
-              v->view->forms->rGridSizeFloatForm->value
-              nGridSize
-            );putpropq
-            
-            (putpropq 
-              v->model
-              v->view->forms->rSplitLayerBooleanButton->value
-              bSplitLayers
-            );putpropq 
-
-            (putpropq 
-              v->model
-              v->view->forms->rMarginFloatForm->value
-              nMargin
-            );putpropq             
-
-            (if 
-              (and 
-                v->view->forms->rOpenWithStringField->value 
-                (greaterp 
-                  (strlen v->view->forms->rOpenWithStringField->value) 
-                  0
-                );greaterp
-              );and
-            then
-              (putpropq 
-                v->model
-                v->view->forms->rOpenWithStringField->value
-                sOpenWith 
-              );putpropq
-            else
-              v->model->sOpenWith = nil
-            );if
-
-            (when v->model->fCheckInout(v)
-            
-              v->model->fWriteTikZ(v)
-              
-              (if v->model->sOpenWith
-                (system 
-                  (strcat 
-                    v->model->sOpenWith
-                    " " 
-                    v->model->sOutDir
-                  );strcat
-                );system
-                (hiDisplayAppDBox 
-                  ?name 'rML2TIKZres 
-                  ?dboxBanner "ML2TikZ Result" 
-                  ?dboxText v->model->sOutDir
-                  ?dialogType 3 
-                  ?buttonLayout 
-                  'Close
-                );hiDisplayAppDBox
-              );if
-            );when
-          );lambda
-          fExecuteML2TIKZ
+          dpl->view->forms->EDml2TikZLayoutForm->outDirFileSelectorField
+          (lsprintf
+            "./%s_%s_%s"
+            dpl->model->cv~>libName
+            dpl->model->cv~>cellName
+            dpl->model->cv~>viewName
+          );lsprintf
+          value
         );putpropq
 
-        (hiDisplayForm v->view->forms->rML2TIKZLayoutForm)
+        (hiDisplayForm dpl->view->forms->EDml2TikZLayoutForm)
       else
 
-        v->model->sLayersLatexFile = sLayersLatexFile
-        v->model->oSourceCellView = oCellView
-        v->model->sOutDir = sOutDir
-        v->model->xShapesPerFile = xShapesPerFile
-        v->model->sLatexCompiler =sLatexCompiler
-        v->model->bMake = bMake
-        v->model->bDebug = bDebug
-        v->model->nGridSize = nGridSize
-        v->model->bSplitLayers = bSplitLayers
-        v->model->nMargin = nMargin
-        v->model->bBox = bBox
+        dpl->model->sLayersLatexFile = sLayersLatexFile
+        dpl->model->cv = oCellView
+        dpl->model->sOutDir = sOutDir
+        dpl->model->xParallelABEruns = 1
+        ;dpl->model->xParallelABEruns = xParallelABEruns
+        dpl->model->xShapesPerFile = xShapesPerFile
+        dpl->model->sLatexCompiler =sLatexCompiler
+        dpl->model->bMake = bMake
+        dpl->model->bDebug = bDebug
+        dpl->model->nGridSize = nGridSize
+        dpl->model->bSplitLayers = bSplitLayers
+        dpl->model->nMargin = nMargin
+        dpl->model->bBox = bBox
 
-        (when v->model->fCheckInout(v)
-          v->model->fWriteTikZ(v)
+        (when dpl->model->fCheckInout(dpl)
+          dpl->model->fWriteTikZ(dpl)
         );when
       );if
     else
-      (fprintf errport "*mL2TikZ* No valid maskLayout view found\n")
+      (fprintf errport "*[ED] ml2TikZ* No valid maskLayout view found\n")
     );if
   );let
 );defun
 
-(defun ML2TIKZCreateLayoutPulldownMenu ()
-  (if (boundp 'ML2TIKZLayoutPulldownMenu) then 
-    ML2TIKZLayoutPulldownMenu
-  else
-    (hiCreatePulldownMenu
-      'ML2TIKZLayoutPulldownMenu
-      "Export"
-      (list
-        (hiCreateMenuItem
-          ?name 'ML2TIKZMenuItem
-          ?itemText "mL2TikZ"
-          ?callback "(ML2TIKZ ?bGraphicalMode t)"
-        );hiCreateMenuItem
-      );list
-    );hiCreatePulldownMenu
-  );if
+;FUNCTION
+; EDml2TikZCreateLayoutPulldownMenu
+;
+;Description:
+; This function creates a pulldown menu
+;
+;Return:
+; pulldown menu
+;
+(defun EDml2TikZCreateLayoutPulldownMenu ()
+  (hiCreatePulldownMenu
+    (quote EDml2TikZLayoutPulldownMenu)
+    "Export"
+    (list
+      (hiCreateMenuItem
+        ?name (quote EDml2TikZMenuItem)
+        ?itemText "maskLayout 2 TikZ"
+        ?callback "(EDml2TikZ ?bGraphicalMode t)"
+      );hiCreateMenuItem
+    );list
+  );hiCreatePulldownMenu
 );defun
 
-(defun ML2TIKZUserPostInstallTrigger (args)
 
-  (let (pulldownMenu)
+;FUNCTION
+; EDml2TikZUserPostInstallTrigger
+;
+;Description:
+; This function is a trigger which added the tools menu item to the VLE
+;
+;Return:
+; t             bool, always 't'
+;
+(defun EDml2TikZUserPostInstallTrigger (args)
+  (when 
+    (not
+      (rexMatchList
+        "EDml2TikZLayoutPulldownMenu"
+        (hiGetBannerMenus args->window)
+      );rexMatchList
+    );not
 
-    (setq pulldownMenu (ML2TIKZCreateLayoutPulldownMenu))
+    (hiInsertBannerMenu
+      args->window 
+      (if (boundp (quote EDml2TikZLayoutPulldownMenu))
+        (eval (quote EDml2TikZLayoutPulldownMenu))
+        (EDml2TikZCreateLayoutPulldownMenu)
+      );if
+      (length (hiGetBannerMenus args->window)) 
+    );hiInsertBannerMenu
+  );when
+  t
+);defun EDml2TikZUserPostInstallTrigger
 
-    ;insert pulldown menu when not registered
-    (unless
-      (apply
-        'or
-        (foreach mapcar menu (hiGetBannerMenus args->window)
-          (equal pulldownMenu (eval menu))
-        );foreach
-      );apply
+;add trigger to Layout-L
+(deRegUserTriggers
+  "maskLayout"
+  nil
+  nil
+  (quote EDml2TikZUserPostInstallTrigger)
+);deRegUserTriggers
 
-      (hiInsertBannerMenu
-        args->window
-        pulldownMenu
-        (length (hiGetBannerMenus args->window))
-      );hiInsertBannerMenu
-    );unless
-  );let  
-);procedure
+;add trigger to Layout-XL
+(deRegUserTriggers
+  "maskLayoutXL"
+  nil
+  nil
+  (quote EDml2TikZUserPostInstallTrigger)
+);deRegUserTriggers
 
-(deRegUserTriggers "maskLayout" nil nil 'ML2TIKZUserPostInstallTrigger)
-(deRegUserTriggers "maskLayoutXL" nil nil 'ML2TIKZUserPostInstallTrigger)
+;add trigger to Layout-GXL
+(deRegUserTriggers
+  "maskLayoutGXL"
+  nil
+  nil
+  (quote EDml2TikZUserPostInstallTrigger)
+);deRegUserTriggers
