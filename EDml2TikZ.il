@@ -25,7 +25,7 @@
 *               2019-12-24 refractured/output dir by user/bBox
 *               2022-08-06 Use advanced boolean engine
 *
-*   Copyright 2022 Reutlingen University, Electronics & Drives (Germany)
+*   Copyright 2022, Reutlingen University, Electronics & Drives
 *
 *   Permission is hereby granted, free of charge, to any person obtaining a 
 *   copy of this software and associated documentation files (the "Software"), 

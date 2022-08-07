@@ -188,7 +188,7 @@ This is why the field *# Parallel ABE runs* is grayed out.
 
 ## License
 
-Copyright (c) 2022 [Electronics & Drives](https://www.electronics-and-drives.de/) 
+Copyright (c) 2022, [Reutlingen University](https://www.reutlingen-university.de), [Electronics & Drives](https://www.electronics-and-drives.de/)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
