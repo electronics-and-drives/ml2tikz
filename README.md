@@ -131,7 +131,7 @@ If this value is not provided, no margin is drawn.
 `bAbe`
 
 If this parameter is true, the Advanced Boolean Engine (ABE) is used.
-This increases execution time drastically, with the disadvantage that
+This decreases execution time drastically, with the disadvantage that
 only octalinear shapes (90 and 45 degree angles) are considered.
 When this feature is disabled, there must be the possibility to create
 (temporary) views in the same cell.
@@ -178,7 +178,7 @@ In this new layout all shapes of interest are copied in merged.
 
 Needed LaTeX usepackages:
 
-+ [graphicx](https://ctan.org/pkg/graphicx)  
++ [graphicx](https://ctan.org/pkg/graphicx)
 + [tikz](https://www.ctan.org/pkg/pgf)
 
 ## Known Issues
