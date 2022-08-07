@@ -67,6 +67,12 @@ This *Makefile* can be executed using
 make
 ```
 
+You can parallelize the creation of the *PDF* with
+
+``` bash
+make --jobs=<NUM OF PARALLEL RUNS>
+```
+
 ### GUI
 
 This tool is added to the Layout Editor under *Export* in the menu bar.
@@ -84,7 +90,7 @@ dialog box.
 
 
 ## Parameters
-The function ML2TIKZ has several keyword parameters:
+The function *EDml2TikZ* has several keyword parameters:
 
 `oCellView`
 
@@ -115,11 +121,20 @@ Bounding Box, which is used for export.
 `nGridSize`
 
 The grid side of the *tikzpicture* in centimeters. If this value is not
-provided, 1cm is used as a default value.
+provided, *1cm* is used as a default value.
 
 `nMargin`
 
-The margin of the *tikzpicture*. If this value is not provided, no margin is drawn.
+The margin of the *tikzpicture*.
+If this value is not provided, no margin is drawn.
+
+`bAbe`
+
+If this parameter is true, the Advanced Boolean Engine (ABE) is used.
+This increases execution time drastically, with the disadvantage that
+only octalinear shapes (90 and 45 degree angles) are considered.
+When this feature is disabled, there must be the possibility to cerate
+(temporary) views in the same cell.
 
 `bDebug`
 
@@ -155,8 +170,7 @@ In the directory *examples* an example of an exported nand2 logic gate is added.
 
 ## Implementation Details
 
-The implementation of the function is rather simple. 
-The function will first create a copy of the maskLayout. 
+When ABE is deactivated, the function will first create a copy of the maskLayout. 
 Then this copy will be flattened. Another new empty layout is created. 
 In this new layout all shapes of interest are copied in merged.
 
@@ -166,6 +180,11 @@ Needed LaTeX usepackages:
 
 + [graphicx](https://ctan.org/pkg/graphicx)  
 + [tikz](https://www.ctan.org/pkg/pgf)
+
+## Known Issues
+
+Multiple threads for ABE cannot be activated, because Virtuoso will crash.
+This is why the field *# Parallel ABE runs* is grayed out.
 
 ## License
 
