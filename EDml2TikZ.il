@@ -292,10 +292,7 @@
             (setq
               sBoundingBox
               (lsprintf
-                (strcat
-                  "\\draw[line width = 0mm,white,opacity=1.0]"
-                  " (%L,%L) rectangle (%L,%L);\n"
-                );strcat
+                "\\useasboundingbox (%L,%L) rectangle (%L,%L);\n"
                 (if dpl->model->bBox 
                   (xCoord (lowerLeft dpl->model->bBox))
                   (difference
@@ -472,6 +469,20 @@
                   );foreach
 
                   (fprintf port " -- cycle;\n")
+                );when
+
+                (when (equal oShape~>objType "rect")
+
+                  (fprintf 
+                    port
+                    "\\draw[%s_%s] (%L,%L) rectangle (%L,%L);\n" 
+                    (car lLayer)
+                    (cadr lLayer)
+                    (xCoord (lowerLeft oShape~>bBox))
+                    (yCoord (lowerLeft oShape~>bBox))  
+                    (xCoord (upperRight oShape~>bBox))
+                    (yCoord (upperRight oShape~>bBox))
+                  );fprintf
                 );when
 
                 (preincrement shapeCount)
@@ -803,10 +814,7 @@
             (setq
               sBoundingBox
               (lsprintf
-                (strcat
-                  "\\useasboundingbox"
-                  " (%L,%L) rectangle (%L,%L);\n"
-                );strcat
+                "\\useasboundingbox (%L,%L) rectangle (%L,%L);\n"
                 (if dpl->model->bBox 
                   (xCoord (lowerLeft dpl->model->bBox))
                   (difference
