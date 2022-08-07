@@ -44,7 +44,7 @@ Only LPPs, separated with a underscore, in  a `\tikzstyle` command, are
 considered for export, e.g
 
 ``` tex
-\tikzstyle{Metal1_drawing}=[draw=blue,fill=blue, fill opacity=0.5]
+\tikzstyle{Metal1|drawing}=[draw=blue,fill=blue, fill opacity=0.5]
 ```
 
 TikZ offers several possibilities to define different styles, e.g. outline, 

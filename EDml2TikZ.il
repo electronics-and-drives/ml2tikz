@@ -25,7 +25,7 @@
 *               2019-12-24 refractured/output dir by user/bBox
 *               2022-08-06 Use advanced boolean engine
 *
-*   Copyright 2022, Reutlingen University, Electronics & Drives
+*   Copyright 2022, Reutlingen University, Electronics & Drives 
 *
 *   Permission is hereby granted, free of charge, to any person obtaining a 
 *   copy of this software and associated documentation files (the "Software"), 
@@ -101,23 +101,31 @@
                 (isReadable dpl->model->sLayersLatexFile)
               );and
 
-              dpl->model->sLayersLatexFileName = (car (last (parseString dpl->model->sLayersLatexFile "/")))
+              (putpropq 
+                dpl->model   
+                (car (last (parseString dpl->model->sLayersLatexFile "/")))
+                sLayersLatexFileName  
+              );putpropq
 
               (setq pPort (infile dpl->model->sLayersLatexFile))
 
               (while (gets s pPort)
 
-                (rexCompile "[ ]*\\tikzstyle{[ ]*\\([a-zA-Z_0-9]*\\)[ ]*}.*")
+                (rexCompile "[ ]*\\tikzstyle{[ ]*\\([\\|a-zA-Z_0-9]*\\)[ ]*}.*")
 
-                (when (rexExecute s) && (equal (length (parseString (rexSubstitute "\\1") "_")) 2)
-                    (putpropq 
-                        dpl->model
-                      (cons
-                        (parseString (rexSubstitute "\\1") "_")
-                        dpl->model->lLayers
-                      );cons
-                      lLayers
-                    );putpropq
+                (when 
+                  (and
+                    (rexExecute s)
+                    (equal (length (parseString (rexSubstitute "\\1") "|")) 2)
+                  );and
+                  (putpropq 
+                    dpl->model
+                    (cons
+                      (parseString (rexSubstitute "\\1") "|")
+                      dpl->model->lLayers
+                    );cons
+                    lLayers
+                  );putpropq
                 );when
               );while
 
@@ -375,7 +383,7 @@
 
                   (setq
                     tikzFileName 
-                    (lsprintf "%s_%s" (car lLayer) (cadr lLayer))
+                    (lsprintf "%s|%s" (car lLayer) (cadr lLayer))
                   );setq
 
                   (setq i -1)
@@ -447,7 +455,7 @@
 
                   (fprintf 
                     port
-                    "\\draw[%s_%s] (%L,%L) rectangle (%L,%L);\n" 
+                    "\\draw[%s|%s] (%L,%L) rectangle (%L,%L);\n" 
                     (car lLayer)
                     (cadr lLayer)
                     (xCoord (lowerLeft shape~>bBox))
@@ -462,7 +470,7 @@
                   (setq
                     str
                     (lsprintf
-                      "\\draw[%s_%s] (%L,%L)"
+                      "\\draw[%s|%s] (%L,%L)"
                       (car lLayer) 
                       (cadr lLayer)
                       (xCoord (car shape~>points)) 
@@ -502,7 +510,7 @@
 
                   (fprintf 
                     port
-                    "\\draw[%s_%s] (%L,%L) circle [x radius=%L, y radius=%L];\n" 
+                    "\\draw[%s|%s] (%L,%L) circle [x radius=%L, y radius=%L];\n" 
                     (car lLayer)
                     (cadr lLayer)
 
@@ -983,7 +991,7 @@
                 (setq
                   str
                   (lsprintf
-                    "\\draw[%s_%s] (%L,%L)"
+                    "\\draw[%s|%s] (%L,%L)"
                     (caar abeLayer) 
                     (cadar abeLayer)
                     (xCoord (car shape))
