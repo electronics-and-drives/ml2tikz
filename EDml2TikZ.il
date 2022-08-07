@@ -206,6 +206,37 @@
               /* g_flattenVias */          t
             );leFlattenInst
 
+            (foreach lLayer dpl->model->lLayers
+              (dbLayerOr
+                dpl->model->oCombinedCellView
+                lLayer
+                (setof 
+                  x 
+                  dpl->model->oFlattenCellView~>shapes 
+                  (and
+                    (equal x~>lpp lLayer)
+                    (nequal x~>objType "ellipse")
+                  );and
+                );setof
+              );dbLayerOr
+            );foreach
+
+            (foreach lLayer dpl->model->lLayers
+              (foreach 
+                ellipse 
+                (setof 
+                  x 
+                  dpl->model->oFlattenCellView~>shapes 
+                  (and
+                    (equal x~>lpp lLayer)
+                    (equal x~>objType "ellipse")
+                  );and
+                );setof 
+
+                (dbCopyShape ellipse dpl->model->oCombinedCellView)
+              );foreach
+            );foreach
+
             dpl->model->xNumOfShapes = 0
 
             (foreach lLayer dpl->model->lLayers
@@ -214,15 +245,11 @@
                 (plus
                   dpl->model->xNumOfShapes
                   (length
-                    (dbLayerOr
-                      dpl->model->oCombinedCellView
-                      lLayer
-                      (setof 
-                        x 
-                        dpl->model->oFlattenCellView~>shapes 
-                        (equal x~>lpp lLayer)
-                      );setof
-                    );dbLayerOr
+                    (setof 
+                      x 
+                      dpl->model->oFlattenCellView~>shapes 
+                      (equal x~>lpp lLayer)
+                    );setof
                   );length
                 );plus
                 xNumOfShapes
@@ -414,23 +441,23 @@
                 );unless
               );if
 
-              (foreach oShape lShapes
+              (foreach shape lShapes
 
-                (when (equal oShape~>objType "rect")
+                (when (equal shape~>objType "rect")
 
                   (fprintf 
                     port
                     "\\draw[%s_%s] (%L,%L) rectangle (%L,%L);\n" 
                     (car lLayer)
                     (cadr lLayer)
-                    (xCoord (lowerLeft oShape~>bBox))
-                    (yCoord (lowerLeft oShape~>bBox))  
-                    (xCoord (upperRight oShape~>bBox))
-                    (yCoord (upperRight oShape~>bBox))
+                    (xCoord (lowerLeft shape~>bBox))
+                    (yCoord (lowerLeft shape~>bBox))  
+                    (xCoord (upperRight shape~>bBox))
+                    (yCoord (upperRight shape~>bBox))
                   );fprintf
                 );when
 
-                (when (equal oShape~>objType "polygon")
+                (when (equal shape~>objType "polygon")
 
                   (setq
                     str
@@ -438,8 +465,8 @@
                       "\\draw[%s_%s] (%L,%L)"
                       (car lLayer) 
                       (cadr lLayer)
-                      (xCoord (car oShape~>points)) 
-                      (yCoord (car oShape~>points))
+                      (xCoord (car shape~>points)) 
+                      (yCoord (car shape~>points))
                     );lsprintf
                   );setq
 
@@ -447,7 +474,7 @@
 
                   (fprintf port str)
 
-                  (foreach lPoint (cdr oShape~>points)
+                  (foreach lPoint (cdr shape~>points)
 
                     (setq
                       str
@@ -471,17 +498,32 @@
                   (fprintf port " -- cycle;\n")
                 );when
 
-                (when (equal oShape~>objType "rect")
+                (when (equal shape~>objType "ellipse")
 
                   (fprintf 
                     port
-                    "\\draw[%s_%s] (%L,%L) rectangle (%L,%L);\n" 
+                    "\\draw[%s_%s] (%L,%L) circle [x radius=%L, y radius=%L];\n" 
                     (car lLayer)
                     (cadr lLayer)
-                    (xCoord (lowerLeft oShape~>bBox))
-                    (yCoord (lowerLeft oShape~>bBox))  
-                    (xCoord (upperRight oShape~>bBox))
-                    (yCoord (upperRight oShape~>bBox))
+
+                    (xCoord (centerBox shape~>bBox))
+                    (yCoord (centerBox shape~>bBox))
+
+                    (quotient 
+                      (difference 
+                        (rightEdge shape~>bBox)
+                        (leftEdge shape~>bBox)
+                      );difference
+                      2.0
+                    );quotient
+
+                    (quotient 
+                      (difference 
+                        (topEdge shape~>bBox)
+                        (bottomEdge shape~>bBox)
+                      );difference
+                      2.0
+                    );quotient
                   );fprintf
                 );when
 
