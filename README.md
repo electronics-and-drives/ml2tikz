@@ -40,8 +40,8 @@ The function must be provided with a *.tex* file
 (`"~/myLayerDefinition.tex"` in the example above) where all layer purpose 
 pairs (LPPs) to be considered in the *tikzpicture* must be defined.
 
-Only LPPs, separated with a underscore, in  a `\tikzstyle` command, are 
-considered for export, e.g
+Only LPPs, separated with the vertical bar |, in  a `\tikzstyle` command, are 
+considered for export, e.g.
 
 ``` tex
 \tikzstyle{Metal1|drawing}=[draw=blue,fill=blue, fill opacity=0.5]
