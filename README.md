@@ -153,6 +153,10 @@ exceeded.
 The compilation results of the individual TeX files will be merged in a
 final *tikzpicture*.
 
+`xShapesPerFile`
+Number of levels that are considered for export. This must be an
+integer between 0 and 32.
+
 ` bSplitLayers `
 
 If this parameter is true, additional *tikzpictures* will be created, 

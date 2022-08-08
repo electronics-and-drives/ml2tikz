@@ -65,6 +65,7 @@
     (bAbe t)
     (xParallelABEruns 1)
     (xShapesPerFile 1000)
+    (xLevels 32)
     (bSplitLayers nil)
     (bBox nil)
     (bMake t)
@@ -205,7 +206,7 @@
                 0:0 
                 "R0"
               );dbCreateInst
-              /* x_levels */               32
+              /* x_levels */               dpl->model->xLevels
               /* g_flattenPCells */        t
               /* g_preservePins */         nil
               /* g_preserveRODobjs */      nil
@@ -781,7 +782,12 @@
                 (list
                   layer
                   (abeLayerMergeTiles
-                    (abeLayerFromCellView (car layer) ?purpose (cadr layer))
+                    (abeLayerFromCellView
+                      (car layer)
+                      ?purpose (cadr layer)
+                      ?startLevel 0
+                      ?stopLevel dpl->model->xLevels
+                    );abeLayerFromCellView
                     "horizontal"
                     ?queue t
                   );abeLayerMergeTiles
@@ -1332,6 +1338,22 @@
           latexFileFileSelectorField
         );putpropq
 
+        ;levelsIntField
+        (putpropq 
+          dpl->view->forms
+          (hiCreateIntField
+            ?name (quote levelsIntField)
+            ?prompt "# Levels"
+            ?value 
+              (if (fixp dpl->model->xLevels)
+                dpl->model->xLevels
+                32
+              );if
+            ?range (list 0 32)
+          );hiCreateIntField
+          levelsIntField
+        );putpropq
+
         ;gridSizeFloatForm
         (putpropq 
           dpl->view->forms
@@ -1530,6 +1552,12 @@
 
             (putpropq 
               dpl->model
+              dpl->view->forms->levelsIntField->value
+              xLevels
+            );putpropq
+
+            (putpropq 
+              dpl->model
               dpl->view->forms->parallelABEruns->value
               xParallelABEruns
             );putpropq            
@@ -1672,6 +1700,7 @@
         dpl->model->sOutDir = sOutDir
         dpl->model->bAbe = bAbe
         dpl->model->xParallelABEruns = 1
+        dpl->model->xLevels = xLevels
         ;dpl->model->xParallelABEruns = xParallelABEruns
         dpl->model->xShapesPerFile = xShapesPerFile
         dpl->model->sLatexCompiler =sLatexCompiler
