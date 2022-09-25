@@ -18,6 +18,11 @@ Cadence Virtuoso:
 ```
 
 A more convenient way might be to add this load command in the `.cdsinit`.
+You can create an additional menu-bar item in the Layout Editor by loading the
+file
+``` scheme
+(load "EDml2TikZUserPostInstallTrigger.il")
+```
 
 ## Usage
 
@@ -75,8 +80,13 @@ make --jobs=<NUM OF PARALLEL RUNS>
 
 ### GUI
 
-This tool is added to the Layout Editor under *Export* in the menu bar.
-If the tool is invoked, a GUI will show up:
+You can open the GUI of this tool with
+``` scheme
+(EDml2TikZ ?bGraphicalMode t)
+```
+This tool is added to the Layout Editor under *Export* in the menu bar, if
+you loaded the file `EDml2TikZUserPostInstallTrigger.il` previously.
+A figure of the GUI is shown below.
 
 ![](fig/ml2tikz_gui.png)
 
@@ -159,7 +169,7 @@ integer between 0 and 32.
 
 ` bSplitLayers `
 
-If this parameter is true, additional *tikzpictures* will be created, 
+If this parameter is true, additional *tikzpicture* will be created, 
 which contain only single layers.
 
 ` bMake `
@@ -168,7 +178,7 @@ If this parameter is set true, `make` is executed automatically.
 
 ## Examples
 
-In the directory *examples* an example of an exported nand2 logic gate is added.
+In the directory *examples* an example of an exported NAND2 logic gate is added.
 
 ![](fig/nand2.png)
 

@@ -9,21 +9,21 @@
 *
 *   Lint: IQ score is 100 (best is 100) 
 *         {sklint ?file "EDml2TikZ.il"}
+*
 *   Globals:
 *    - Symbols:
 *     o EDml2TikZ
-*     o Forms and Fields:
-*      x EDml2TikZLayoutForm
+*    - Forms and Fields:
+*     o EDml2TikZLayoutForm
 *    - Functions:
 *     o EDml2TikZ
-*     o EDml2TikZCreateLayoutPulldownMenu
-*     o EDml2TikZUserPostInstallTrigger
 *
 *   Revision:   2019-03-29 Created
 *               2019-04-16 Added GUI
 *               2019-06-05 Added margin
 *               2019-12-24 refractured/output dir by user/bBox
 *               2022-08-06 Use advanced boolean engine
+*               2022-09-25 Add layout menu items to separate file
 *
 *   Copyright 2022, Reutlingen University, Electronics & Drives 
 *
@@ -1725,81 +1725,3 @@
     );if
   );let
 );defun EDml2TikZ
-
-;FUNCTION
-; EDml2TikZCreateLayoutPulldownMenu
-;
-;Description:
-; This function creates a pulldown menu
-;
-;Return:
-; pulldown menu
-;
-(defun EDml2TikZCreateLayoutPulldownMenu ()
-  (hiCreatePulldownMenu
-    (quote EDml2TikZLayoutPulldownMenu)
-    "Export"
-    (list
-      (hiCreateMenuItem
-        ?name (quote EDml2TikZMenuItem)
-        ?itemText "maskLayout 2 TikZ"
-        ?callback "(EDml2TikZ ?bGraphicalMode t)"
-      );hiCreateMenuItem
-    );list
-  );hiCreatePulldownMenu
-);defun
-
-
-;FUNCTION
-; EDml2TikZUserPostInstallTrigger
-;
-;Description:
-; This function is a trigger which added the tools menu item to the VLE
-;
-;Return:
-; t             bool, always 't'
-;
-(defun EDml2TikZUserPostInstallTrigger (args)
-  (when 
-    (not
-      (rexMatchList
-        "EDml2TikZLayoutPulldownMenu"
-        (hiGetBannerMenus args->window)
-      );rexMatchList
-    );not
-
-    (hiInsertBannerMenu
-      args->window 
-      (if (boundp (quote EDml2TikZLayoutPulldownMenu))
-        (eval (quote EDml2TikZLayoutPulldownMenu))
-        (EDml2TikZCreateLayoutPulldownMenu)
-      );if
-      (length (hiGetBannerMenus args->window)) 
-    );hiInsertBannerMenu
-  );when
-  t
-);defun EDml2TikZUserPostInstallTrigger
-
-;add trigger to Layout-L
-(deRegUserTriggers
-  "maskLayout"
-  nil
-  nil
-  (quote EDml2TikZUserPostInstallTrigger)
-);deRegUserTriggers
-
-;add trigger to Layout-XL
-(deRegUserTriggers
-  "maskLayoutXL"
-  nil
-  nil
-  (quote EDml2TikZUserPostInstallTrigger)
-);deRegUserTriggers
-
-;add trigger to Layout-GXL
-(deRegUserTriggers
-  "maskLayoutGXL"
-  nil
-  nil
-  (quote EDml2TikZUserPostInstallTrigger)
-);deRegUserTriggers
