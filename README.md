@@ -186,7 +186,7 @@ In the directory *examples* an example of an exported NAND2 logic gate is added.
 
 When ABE is deactivated, the function will first create a copy of the maskLayout. 
 Then this copy will be flattened. Another new empty layout is created. 
-In this new layout all shapes of interest are copied in merged.
+In this new layout all shapes of interest are copied and merged.
 
 ## Dependencies
 
