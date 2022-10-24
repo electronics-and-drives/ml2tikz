@@ -197,8 +197,9 @@ Needed LaTeX usepackages:
 
 ## Known Issues
 
-Multiple threads for ABE cannot be activated, because Virtuoso will crash.
-This is why the field *# Parallel ABE runs* is grayed out.
+- Multiple threads for ABE cannot be activated, because Virtuoso will crash.
+  This is why the field *# Parallel ABE runs* is grayed out.
+- Labels are not exported
 
 ## License
 
