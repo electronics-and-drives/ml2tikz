@@ -176,6 +176,15 @@ which contain only single layers.
 
 If this parameter is set true, `make` is executed automatically.
 
+## Environment Variables
+
+You can preset the field *Layers Latex File* in the GUI with
+the environment variable `ED_ML2TIKZ_LAYERS`, e.g.,
+
+``` bash
+export ED_ML2TIKZ_LAYERS=~/myLayerDefinition.tex
+```
+
 ## Examples
 
 In the directory *examples* an example of an exported NAND2 logic gate is added.

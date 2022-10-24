@@ -1332,7 +1332,19 @@
               (if dpl->model->sLayersLatexFile then
                 dpl->model->sLayersLatexFile
               else
-                " "
+                (let ((envvar "ED_ML2TIKZ_LAYERS") path)
+
+                  (setq path (getShellEnvVar envvar))
+                  
+                  (if 
+                    (and
+                      (isFile path)
+                      (isReadable path)
+                    );and
+                    path
+                    " "
+                  );if
+                );let
               );if
           );hiCreateFileSelectorField
           latexFileFileSelectorField
