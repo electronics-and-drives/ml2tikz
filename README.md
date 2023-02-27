@@ -6,7 +6,7 @@
 
 Cadence SKILL function, which can be used to create a *tikzpicture* of 
 a *maskLayout*. 
-This is especially useful for theses, publications and presentation.
+This is especially useful for theses, publications and presentations.
 
 ## Installation
 
@@ -212,7 +212,7 @@ Needed LaTeX usepackages:
 
 ## License
 
-Copyright (c) 2022, [Reutlingen University](https://www.reutlingen-university.de), [Electronics & Drives](https://www.electronics-and-drives.de/)
+Copyright (c) 2023, [Reutlingen University](https://www.reutlingen-university.de), [Electronics & Drives](https://www.electronics-and-drives.de/)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
