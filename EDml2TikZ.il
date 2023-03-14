@@ -1338,6 +1338,7 @@
                   
                   (if 
                     (and
+                      (stringp path)
                       (isFile path)
                       (isReadable path)
                     );and
