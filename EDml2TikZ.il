@@ -24,6 +24,7 @@
 *               2019-12-24 refractured/output dir by user/bBox
 *               2022-08-06 Use advanced boolean engine
 *               2022-09-25 Add layout menu items to separate file
+*               2023-03-26 Improved comments
 *
 *   Copyright 2023, Reutlingen University, Electronics & Drives 
 *
@@ -81,13 +82,130 @@
       (putpropq (quote EDml2TikZ) (list nil) dpl)
     );unless
 
+  ; The whole data of the tool is stored in the disembodied property list dpl. 
+  ; This dpl is stored in the property list of the  symbol 'EDml2TikZ'. 
+  ; The dpl can be retrieved by'EDml2TikZ.dpl'. 
+  ; The structure of the dpl is shown below:
+  ;
+  ; dpl
+  ; |
+  ; +view                                   fields and forms are described below
+  ; |   |
+  ; |   +forms
+  ; |   |   |
+  ; |   |   +outDirFileSelectorField (1.1)
+  ; |   |   |
+  ; |   |   +latexFileFileSelectorField (1.2)
+  ; |   |   |
+  ; |   |   +levelsIntField (1.3)
+  ; |   |   |
+  ; |   |   +gridSizeFloatForm (1.4)
+  ; |   |   |
+  ; |   |   +marginFloatForm (1.5)
+  ; |   |   |
+  ; |   |   +latexCompilerStringField (1.6)
+  ; |   |   |
+  ; |   |   +abeBooleanButton (1.7)
+  ; |   |   |
+  ; |   |   +parallelABEruns (1.8)
+  ; |   |   |
+  ; |   |   +shapesPerFileIntField (1.9)
+  ; |   |   |
+  ; |   |   +openWithStringField (1.10)
+  ; |   |   |
+  ; |   |   +splitLayerBooleanButton (1.11)
+  ; |   |   |
+  ; |   |   +makeBooleanButton (1.12)
+  ; |   |   |
+  ; |   |   +debugBooleanButton (1.13)
+  ; |   |   |
+  ; |   |   +EDml2TikZFormLayout (1)
+  ; |   |
+  ; |   +callbacks
+  ; |       |
+  ; |       +fExecuteMl2TikZ
+  ; |
+  ; +temp  
+  ; |   |
+  ; |   +sStartTime               string, time stamp when the tool os started
+  ; |
+  ; +model
+  ; |   |
+  ; |   +cv                       db-obj, cellview database object of the 
+  ; |   |                                  layout to be exported
+  ; |   |
+  ; |   +sLayersLatexFile         string, path to the LaTeX file where all
+  ; |   |                                  layers are defined
+  ; |   |
+  ; |   +sOutDir                  string, path to the output directory
+  ; |   |
+  ; |   +bAbe                     bool, indicated if the Advanced Boolean
+  ; |   |                                Engine (ABE) is used
+  ; |   |     
+  ; |   +xParallelABEruns         int, number of parallel ABE runs
+  ; |   | 
+  ; |   +xLevels                  int, number of levels of hierarchy through
+  ; |   |                              which the layout is exported
+  ; |   |                               
+  ; |   +xShapesPerFile           int, max- number of shapes that are
+  ; |   |                              exported to a *.tex* file
+  ; |   |
+  ; |   +sLatexCompiler           string, name of the LaTeX compiler
+  ; |   |
+  ; |   +bMake                    bool, execute *make* after export
+  ; |   |
+  ; |   +bDebug                   bool, enable debug mode, i.e., the
+  ; |   |                                intermediate cellviews are not 
+  ; |   |                                deleted after export
+  ; |   |
+  ; |   +nGridSize               float, grid size in cm in the *.tex* file
+  ; |   |
+  ; |   +bSplitLayers            bool, split the layers in different *.tex*
+  ; |   |                               files
+  ; |   |
+  ; |   +nMargin                float, margin between the layout and the 
+  ; |   |                              border of the resulting PDF
+  ; |   | 
+  ; |   +bBox                   list, bounding box of the layout to be exported
+  ; |   | 
+  ; |   +oFlattenCellView       db-obj, cellview database object of the
+  ; |   |                                flattened layout  
+  ; |   | 
+  ; |   +oCombinedCellView      db-obj, cellview database object of the
+  ; |   |                                combined layout    
+  ; |   | 
+  ; |   +lLayers                list, list of layers to be exported
+  ; |   |
+  ; |   +xNumOfShapes           int, shape counter
+  ; |   | 
+  ; |   |  
+  ; |   |                        lambda functions are explained below
+  ; |   +fCheckInout
+  ; |   |
+  ; |   +fWriteTikZwithABE
+  ; |   |
+  ; |   +fWriteTikZ 
+  ; |   |
+  ; |   +fReadInLayersLatexFile   
+      
     (setq dpl EDml2TikZ.dpl)
 
     (unless dpl->model
 
       dpl->model = (list nil)
 
-      ;fReadInLayersLatexFile
+      ;LAMBDA FUNCTION
+      ; fReadInLayersLatexFile
+      ;
+      ;Description:
+      ; Read all layers to be exported from a *.tex* file
+      ;
+      ;Parameters:
+      ;  dpl       dpl, disembodied property list of the tool
+      ; 
+      ;Return:
+      ; lLayers    list, list of layers
+      ;
       (putpropq 
         dpl->model
         (lambda (dpl)
@@ -142,7 +260,19 @@
         fReadInLayersLatexFile
       );putpropq
 
-      ;fWriteTikZ
+
+      ;LAMBDA FUNCTION
+      ; fWriteTikZ
+      ;
+      ;Description:
+      ; Export the layout as TikZ
+      ;
+      ;Parameters:
+      ;  dpl       dpl, disembodied property list of the tool
+      ; 
+      ;Return:
+      ; sOutDir    string, path to output directory
+      ;
       (putpropq 
         dpl->model
         (lambda (dpl)
@@ -746,7 +876,19 @@
         fWriteTikZ
       );putpropq
 
-      ;fWriteTikZwithABE
+
+      ;LAMBDA FUNCTION
+      ; fWriteTikZwithABE
+      ;
+      ;Description:
+      ; Export the layout as TikZ using ABE
+      ;
+      ;Parameters:
+      ;  dpl       dpl, disembodied property list of the tool
+      ; 
+      ;Return:
+      ; sOutDir    string, path to output directory
+      ;
       (putpropq 
         dpl->model
         (lambda (dpl)
@@ -1218,7 +1360,19 @@
         fWriteTikZwithABE
       );putpropq
 
-      ;fCheckInout
+
+      ;LAMBDA FUNCTION
+      ; fCheckInout
+      ;
+      ;Description:
+      ; Check if the input data that is provided to the tool is valid
+      ;
+      ;Parameters:
+      ;  dpl       dpl, disembodied property list of the tool
+      ; 
+      ;Return:
+      ; t/nil      bool, 't' when data valid, 'nil' otherwise
+      ;
       (putpropq 
         dpl->model
         (lambda (dpl)
