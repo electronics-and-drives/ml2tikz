@@ -1305,11 +1305,76 @@
     (when bGraphicalMode
       
       (unless dpl->view
+
         dpl->view = (list nil)
         dpl->view->forms = (list nil)
         dpl->view->callbacks = (list nil)
 
-        ;outDirFileSelectorField
+        ; 'maskLayout 2 TikZ' form 
+        ;
+        ;  +---------------------------------------+-+-+
+        ;  | [ED] maskLayout 2 TikZ                |v|x|
+        ;  +---------------------------------------+-+-+
+        ;  |                                           |          v
+        ;  |                      +----------+  +---+  |          |
+        ;  | Output Directory     |          |  |...|  | <- 1.1   |
+        ;  |                      +----------+  +---+  |          |
+        ;  |                                           |          |
+        ;  |                      +----------+  +---+  |          |
+        ;  | Layers Latex File    |          |  |...|  | <- 1.2   |  
+        ;  |                      +----------+  +---+  |          |
+        ;  |                                           |          |
+        ;  |                      +-----------------+  |          |
+        ;  | # Levels             |                 |  | <- 1.3   |
+        ;  |                      +-----------------+  |          |
+        ;  |                                           |          |
+        ;  |                      +-----------------+  |          |
+        ;  | Grid Size [cm]       |                 |  | <- 1.4   |
+        ;  |                      +-----------------+  |          |
+        ;  |                                           |          |
+        ;  |                      +-----------------+  |          |
+        ;  | Margin               |                 |  | <- 1.5   |
+        ;  |                      +-----------------+  |          |
+        ;  |                                           |          |
+        ;  |                      +-----------------+  |          |
+        ;  | Latex Compiler       |                 |  | <- 1.6   |
+        ;  |                      +-----------------+  |          |
+        ;  |                                           |          |1
+        ;  |                      +---+                |          |
+        ;  | Use ABE              | v |                | <- 1.7   |
+        ;  |                      +---+                |          |
+        ;  |                                           |          |
+        ;  |                      +-----------------+  |          |
+        ;  | # Parallel ABE runs  |                 |  | <- 1.8   |
+        ;  |                      +-----------------+  |          |
+        ;  |                                           |          |
+        ;  |                      +-----------------+  |          |
+        ;  | # Shapes per File    |                 |  | <- 1.9   |
+        ;  |                      +-----------------+  |          |
+        ;  |                                           |          |
+        ;  |                      +-----------------+  |          |
+        ;  | Open with            |                 |  | <- 1.10  |
+        ;  |                      +-----------------+  |          |
+        ;  |                                           |          |
+        ;  |                      +---+                |          |
+        ;  | Split Layers         | v |                | <- 1.11  |
+        ;  |                      +---+                |          |
+        ;  |                                           |          |
+        ;  |                      +---+                |          |
+        ;  | Make                 |   |                | <- 1.12  |
+        ;  |                      +---+                |          |
+        ;  |                                           |          |
+        ;  |                      +---+                |          |
+        ;  | Debug                |   |                | <- 1.13  |
+        ;  |                      +---+                |          ^
+        ;  |                                           |
+        ;  |  +----+  +--------+  +-------+  +------+  |
+        ;  |  | OK |  | Cancel |  | Apply |  | Help |  |
+        ;  |  +----+  +--------+  +-------+  +------+  |
+        ;  +-------------------------------------------+
+
+
+        ;outDirFileSelectorField (1.1)
         (putpropq 
           dpl->view->forms
           (hiCreateFileSelectorField
@@ -1321,7 +1386,7 @@
           outDirFileSelectorField
         );putpropq
 
-        ;latexFileFileSelectorField
+        ;latexFileFileSelectorField (1.2)
         (putpropq 
           dpl->view->forms
           (hiCreateFileSelectorField
@@ -1351,7 +1416,7 @@
           latexFileFileSelectorField
         );putpropq
 
-        ;levelsIntField
+        ;levelsIntField (1.3)
         (putpropq 
           dpl->view->forms
           (hiCreateIntField
@@ -1367,7 +1432,7 @@
           levelsIntField
         );putpropq
 
-        ;gridSizeFloatForm
+        ;gridSizeFloatForm (1.4)
         (putpropq 
           dpl->view->forms
           (hiCreateFloatField
@@ -1383,7 +1448,7 @@
           gridSizeFloatForm
         );putpropq
         
-        ;marginFloatForm
+        ;marginFloatForm (1.5)
         (putpropq 
           dpl->view->forms
           (hiCreateFloatField
@@ -1399,7 +1464,7 @@
           marginFloatForm
         );putpropq
 
-        ;latexCompilerStringField
+        ;latexCompilerStringField (1.6)
         (putpropq 
           dpl->view->forms
           (hiCreateStringField
@@ -1414,7 +1479,7 @@
           latexCompilerStringField
         );putpropq
 
-        ;abeBooleanButton
+        ;abeBooleanButton (1.7)
         (putpropq 
           dpl->view->forms
           (hiCreateBooleanButton
@@ -1425,7 +1490,7 @@
           abeBooleanButton
         );putpropq
 
-        ;parallelABEruns
+        ;parallelABEruns (1.8)
         (putpropq 
           dpl->view->forms
           (hiCreateIntField
@@ -1443,7 +1508,7 @@
           parallelABEruns
         );putpropq
 
-        ;shapesPerFileIntField
+        ;shapesPerFileIntField (1.9)
         (putpropq 
           dpl->view->forms
           (hiCreateIntField
@@ -1459,7 +1524,7 @@
           shapesPerFileIntField
         );putpropq
         
-        ;openWithStringField
+        ;openWithStringField (1.10)
         (putpropq 
           dpl->view->forms
           (hiCreateStringField
@@ -1474,7 +1539,7 @@
           openWithStringField
         );putpropq
 
-        ;splitLayerBooleanButton
+        ;splitLayerBooleanButton (1.11)
         (putpropq 
           dpl->view->forms
           (hiCreateBooleanButton
@@ -1485,7 +1550,7 @@
           splitLayerBooleanButton
         );putpropq
 
-        ;makeBooleanButton
+        ;makeBooleanButton (1.12)
         (putpropq 
           dpl->view->forms
           (hiCreateBooleanButton
@@ -1496,7 +1561,7 @@
           makeBooleanButton
         );putpropq
 
-        ;debugBooleanButton
+        ;debugBooleanButton (1.13)
         (putpropq 
           dpl->view->forms
           (hiCreateBooleanButton
@@ -1507,7 +1572,7 @@
           debugBooleanButton
         );putpropq
 
-        ;EDml2TikZFormLayout
+        ;EDml2TikZFormLayout (1)
         (putpropq 
           dpl->view->forms
           (hiCreateFormLayout
