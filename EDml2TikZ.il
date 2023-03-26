@@ -1544,7 +1544,7 @@
         );putpropq
 
         (putpropq
-          (quote EDdrawBondWires)
+          (quote EDml2TikZLayoutForm)
           "(hiLaunchBrowser \"https://github.com/electronics-and-drives/ml2tikz\")"
           hiHelpAction
         );putpropq
