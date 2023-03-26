@@ -25,7 +25,7 @@
 *               2022-08-06 Use advanced boolean engine
 *               2022-09-25 Add layout menu items to separate file
 *
-*   Copyright 2022, Reutlingen University, Electronics & Drives 
+*   Copyright 2023, Reutlingen University, Electronics & Drives 
 *
 *   Permission is hereby granted, free of charge, to any person obtaining a 
 *   copy of this software and associated documentation files (the "Software"), 
@@ -1539,9 +1539,14 @@
                 );strcat
                 "nil"
               );list
-            ?buttonDisabled (list (quote Help))
           );hiCreateLayoutForm
           EDml2TikZLayoutForm
+        );putpropq
+
+        (putpropq
+          (quote EDdrawBondWires)
+          "(hiLaunchBrowser \"https://github.com/electronics-and-drives/ml2tikz\")"
+          hiHelpAction
         );putpropq
         
         ;fExecuteMl2TikZ
