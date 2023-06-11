@@ -25,6 +25,7 @@
 *               2022-08-06 Use advanced boolean engine
 *               2022-09-25 Add layout menu items to separate file
 *               2023-03-26 Improved comments
+*               2023-06-11 Bugfix seperate layers
 *
 *   Copyright 2023, Reutlingen University, Electronics & Drives 
 *
@@ -514,13 +515,22 @@
 
                   (setq
                     tikzFileName 
-                    (lsprintf "%s|%s" (car lLayer) (cadr lLayer))
+                    (lsprintf "layout_%s_%s" (car lLayer) (cadr lLayer))
                   );setq
 
                   (setq i -1)
+
                   (setq 
                     filesForToplevel 
                     (cons tikzFileName filesForToplevel)
+                  );setq
+
+                  (setq
+                    filesToCompile
+                    (cons 
+                      tikzFileName
+                      filesToCompile
+                    );cons
                   );setq
                 else
 
@@ -528,11 +538,14 @@
                     tikzFileName
                     (lsprintf "%s_%s_0" (car lLayer) (cadr lLayer))
                   );setq
+
                   (setq i 0)
+
                   (setq
                     filesPerLayer
                     (cons tikzFileName filesPerLayer)
                   );setq
+
                 );if
 
                 (setq
@@ -1064,7 +1077,7 @@
 
                   (setq
                     tikzFileName 
-                    (lsprintf "%s_%s" (caar abeLayer) (cadar abeLayer))
+                    (lsprintf "layout_%s_%s" (caar abeLayer) (cadar abeLayer))
                   );setq
 
                   (setq i -1)
@@ -1072,6 +1085,14 @@
                   (setq 
                     filesForToplevel 
                     (cons tikzFileName filesForToplevel)
+                  );setq
+
+                  (setq
+                    filesToCompile
+                    (cons 
+                      tikzFileName
+                      filesToCompile
+                    );cons
                   );setq
                 else
 
@@ -1182,12 +1203,13 @@
                   (close port)
 
                   (if dpl->model->bSplitLayers then
+
                     (setq 
                       tikzFileName 
                       (lsprintf 
                         "%s_%s_%L" 
-                        (caar abeLayer) 
-                        (cadar abeLayer) 
+                        (caar abeLayer)
+                        (cadar abeLayer)
                         (preincrement i)
                       );lsprintf
                     );setq
@@ -1307,8 +1329,6 @@
             
             (setq port (outfile (strcat dpl->model->sOutDir "Makefile")))
             (fprintf port "LATEXCOMPILER=%s\n" dpl->model->sLatexCompiler)
-            (fprintf port "\n")
-
             (fprintf port "\nall:")
 
             (foreach file (reverse (cdr filesToCompile))
